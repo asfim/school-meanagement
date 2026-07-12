@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import Swal from 'sweetalert2';
 
 interface Teacher {
     id: number;
@@ -38,9 +39,19 @@ function applyFilters() {
 }
 
 function deleteTeacher(id: number) {
-    if (confirm('Are you sure you want to remove this teacher record? This cannot be undone.')) {
-        router.delete(`/teachers/${id}`);
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Are you sure you want to remove this teacher record? This cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#171717',
+        cancelButtonColor: '#dc2626',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/teachers/${id}`);
+        }
+    });
 }
 </script>
 
@@ -114,7 +125,7 @@ function deleteTeacher(id: number) {
                         <div>
                             <span class="text-xs font-semibold text-neutral-400 block mb-1">Subjects Taught</span>
                             <div class="flex flex-wrap gap-1">
-                                <span v-for="sub in teacher.subjects" :key="sub" class="inline-flex px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-300 font-medium">
+                                <span v-for="sub in teacher.subjects" :key="sub" class="inline-flex px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-900 font-medium">
                                     {{ sub }}
                                 </span>
                             </div>
@@ -124,7 +135,7 @@ function deleteTeacher(id: number) {
                         <div>
                             <span class="text-xs font-semibold text-neutral-400 block mb-1">Assigned Classes</span>
                             <div class="flex flex-wrap gap-1">
-                                <span v-for="cl in teacher.classes" :key="cl" class="inline-flex px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-300 font-medium">
+                                <span v-for="cl in teacher.classes" :key="cl" class="inline-flex px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-900 font-medium">
                                     {{ cl }}
                                 </span>
                             </div>

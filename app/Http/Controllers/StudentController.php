@@ -22,8 +22,8 @@ class StudentController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('full_name_en', 'like', "%{$search}%")
-                  ->orWhere('student_id', 'like', "%{$search}%")
-                  ->orWhere('roll_number', 'like', "%{$search}%");
+                    ->orWhere('student_id', 'like', "%{$search}%")
+                    ->orWhere('roll_number', 'like', "%{$search}%");
             });
         }
 
@@ -88,7 +88,7 @@ class StudentController extends Controller
             $parts = explode('-', $lastStudent->student_id);
             $nextNum = (int) end($parts) + 1;
         }
-        $validated['student_id'] = 'STU-' . $year . '-' . sprintf('%04d', $nextNum);
+        $validated['student_id'] = 'STU-'.$year.'-'.sprintf('%04d', $nextNum);
 
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('students', 'public');

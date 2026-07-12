@@ -87,7 +87,7 @@ function printReceipt() {
                     <div><span class="text-neutral-500">Student Name:</span> <span class="font-bold">{{ payment.student.full_name_en }}</span></div>
                     <div><span class="text-neutral-500">Student ID:</span> <span class="font-bold font-mono">{{ payment.student.student_id }}</span></div>
                     <div><span class="text-neutral-500">Class:</span> <span class="font-semibold">{{ payment.student.class }} (Sec {{ payment.student.section }})</span></div>
-                    <div><span class="text-neutral-500">Roll Number:</span> <span class="font-semibold">#{{ payment.student.roll_number }}</span></div>
+                    <div><span class="text-neutral-500">Roll Number:</span> <span class="font-semibold">{{ payment.student.roll_number }}</span></div>
                 </div>
             </div>
 

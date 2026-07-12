@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import Swal from 'sweetalert2';
 
 interface Student {
     id: number;
@@ -29,14 +30,13 @@ const props = defineProps<{
         class?: string;
         section?: string;
     };
+    classes: string[];
+    sections: string[];
 }>();
 
 const search = ref(props.filters.search || '');
 const selectedClass = ref(props.filters.class || '');
 const selectedSection = ref(props.filters.section || '');
-
-const classes = ['Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'];
-const sections = ['A', 'B', 'C'];
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -60,15 +60,35 @@ watch([selectedClass, selectedSection], () => {
 });
 
 function deleteStudent(id: number) {
-    if (confirm('Are you sure you want to delete this student record? This cannot be undone.')) {
-        router.delete(`/students/${id}`);
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Are you sure you want to delete this student record? This cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#171717',
+        cancelButtonColor: '#dc2626',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/students/${id}`);
+        }
+    });
 }
 
 function issueTc(id: number) {
-    if (confirm('Are you sure you want to issue a Transfer Certificate (TC) for this student?')) {
-        router.post(`/students/${id}/issue-tc`);
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Are you sure you want to issue a Transfer Certificate (TC) for this student?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#171717',
+        cancelButtonColor: '#dc2626',
+        confirmButtonText: 'Yes, issue it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(`/students/${id}/issue-tc`);
+        }
+    });
 }
 </script>
 

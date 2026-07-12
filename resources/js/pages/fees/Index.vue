@@ -18,14 +18,30 @@ interface FeeSheetRow {
     payment_date: string | null;
 }
 
+interface LinkItem {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedFeeSheet {
+    data: FeeSheetRow[];
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+    links: LinkItem[];
+}
+
 const props = defineProps<{
-    feeSheet: FeeSheetRow[];
+    feeSheet: PaginatedFeeSheet;
     classes: string[];
     sections: string[];
     currentFilters: {
         class: string;
         section: string;
         month: string;
+        search?: string;
     };
     summary: {
         total_collected: number;
@@ -37,6 +53,7 @@ const props = defineProps<{
 const selectedClass = ref(props.currentFilters.class);
 const selectedSection = ref(props.currentFilters.section);
 const selectedMonth = ref(props.currentFilters.month);
+const search = ref(props.currentFilters.search || '');
 
 const showCollectModal = ref(false);
 const activeRow = ref<FeeSheetRow | null>(null);
@@ -59,13 +76,15 @@ function applyFilters() {
         class: selectedClass.value,
         section: selectedSection.value,
         month: selectedMonth.value,
+        search: search.value,
     }, {
         preserveState: true,
+        replace: true,
     });
 }
 
 // Watch filters
-watch([selectedClass, selectedSection, selectedMonth], () => {
+watch([selectedClass, selectedSection, selectedMonth, search], () => {
     applyFilters();
 });
 
@@ -128,7 +147,16 @@ function submitCollection() {
             </div>
 
             <!-- Filters Toolbar -->
-            <div class="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-500 mb-1">Search Student</label>
+                    <input
+                        v-model="search"
+                        type="text"
+                        placeholder="Search by Roll, Name, ID..."
+                        class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-450 focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-300"
+                    />
+                </div>
                 <div>
                     <label class="block text-xs font-semibold text-neutral-500 mb-1">Billing Month *</label>
                     <input
@@ -168,8 +196,8 @@ function submitCollection() {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
-                            <tr v-for="row in feeSheet" :key="row.student_id" class="hover:bg-neutral-50/50 dark:hover:bg-neutral-950/30 text-neutral-700 dark:text-neutral-300">
-                                <td class="p-4 font-bold text-neutral-950 dark:text-neutral-100">#{{ row.roll_number }}</td>
+                            <tr v-for="row in feeSheet.data" :key="row.student_id" class="hover:bg-neutral-50/50 dark:hover:bg-neutral-950/30 text-neutral-700 dark:text-neutral-300">
+                                <td class="p-4 font-bold text-neutral-950 dark:text-neutral-100">{{ row.roll_number }}</td>
                                 <td class="p-4 font-mono text-xs font-semibold">{{ row.student_uid }}</td>
                                 <td class="p-4 font-semibold text-neutral-950 dark:text-neutral-100">{{ row.full_name }}</td>
                                 <td class="p-4 text-center font-mono font-bold">${{ row.amount_due }}</td>
@@ -199,11 +227,28 @@ function submitCollection() {
                                     <span v-if="!row.has_billing" class="text-xs text-neutral-400">unbilled</span>
                                 </td>
                             </tr>
-                            <tr v-if="feeSheet.length === 0">
-                                <td colspan="8" class="p-8 text-center text-neutral-500">No students enrolled.</td>
+                            <tr v-if="feeSheet.data.length === 0">
+                                <td colspan="8" class="p-8 text-center text-neutral-500">No students enrolled matching filters.</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="feeSheet.last_page > 1" class="p-4 bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+                    <div class="text-xs text-neutral-500">Page {{ feeSheet.current_page }} of {{ feeSheet.last_page }}</div>
+                    <div class="flex gap-2">
+                        <Link
+                            v-for="link in feeSheet.links"
+                            :key="link.label"
+                            :href="link.url || '#'"
+                            :class="[
+                                'px-3 py-1 text-xs rounded border transition',
+                                link.active ? 'bg-neutral-950 text-white border-neutral-950 dark:bg-neutral-50 dark:text-neutral-950' : 'bg-white hover:bg-neutral-100 text-neutral-700 border-neutral-300 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300'
+                            ]"
+                            v-html="link.label"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

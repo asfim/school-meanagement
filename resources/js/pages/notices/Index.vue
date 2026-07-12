@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
 
 interface Notice {
     id: number;
@@ -24,9 +25,19 @@ const breadcrumbs = [
 ];
 
 function deleteNotice(id: number) {
-    if (confirm('Are you sure you want to delete this notice? It will disappear from the homepage.')) {
-        router.delete(`/notices/${id}`);
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Are you sure you want to delete this notice? It will disappear from the homepage.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#171717',
+        cancelButtonColor: '#dc2626',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/notices/${id}`);
+        }
+    });
 }
 </script>
 

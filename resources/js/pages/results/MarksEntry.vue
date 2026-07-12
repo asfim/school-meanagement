@@ -72,7 +72,7 @@ const breadcrumbs = [
                         </thead>
                         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
                             <tr v-for="(student, sIndex) in marksSheet" :key="student.student_id" class="text-neutral-700 dark:text-neutral-300">
-                                <td class="p-4 font-bold text-neutral-950 dark:text-neutral-100">#{{ student.roll_number }}</td>
+                                <td class="p-4 font-bold text-neutral-950 dark:text-neutral-100">{{ student.roll_number }}</td>
                                 <td class="p-4">
                                     <div class="font-bold text-neutral-950 dark:text-neutral-100">{{ student.full_name }}</div>
                                     <div class="text-[10px] font-mono text-neutral-450">{{ student.student_uid }}</div>

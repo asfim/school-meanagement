@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted } from 'vue';
+import Swal from 'sweetalert2';
 
 interface Student {
     id: number;
@@ -70,9 +71,19 @@ onUnmounted(() => {
 });
 
 function issueTc() {
-    if (confirm('Are you sure you want to issue a Transfer Certificate (TC)?')) {
-        router.post(`/students/${props.student.id}/issue-tc`);
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Are you sure you want to issue a Transfer Certificate (TC)?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#171717',
+        cancelButtonColor: '#dc2626',
+        confirmButtonText: 'Yes, issue it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(`/students/${props.student.id}/issue-tc`);
+        }
+    });
 }
 </script>
 
@@ -131,7 +142,7 @@ function issueTc() {
                     <div class="w-full text-left space-y-3 text-sm">
                         <div class="flex justify-between"><span class="text-neutral-500">Class:</span> <span class="font-semibold">{{ student.class }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Section:</span> <span class="font-semibold">Section {{ student.section }}</span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Roll Number:</span> <span class="font-semibold">#{{ student.roll_number }}</span></div>
+                        <div class="flex justify-between"><span class="text-neutral-500">Roll Number:</span> <span class="font-semibold">{{ student.roll_number }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Blood Group:</span> <span class="font-semibold text-red-650">{{ student.blood_group || 'N/A' }}</span></div>
                     </div>
                 </div>
@@ -201,7 +212,7 @@ function issueTc() {
                                     <div class="font-extrabold text-sm text-neutral-900 dark:text-neutral-100">{{ student.full_name_en }}</div>
                                     <div>ID: <span class="font-bold text-neutral-900 dark:text-neutral-100 font-mono">{{ student.student_id }}</span></div>
                                     <div>Class: <span class="font-semibold">{{ student.class }} (Sec {{ student.section }})</span></div>
-                                    <div>Roll: <span class="font-semibold">#{{ student.roll_number }}</span></div>
+                                    <div>Roll: <span class="font-semibold">{{ student.roll_number }}</span></div>
                                     <div>Emergency: <span class="font-mono text-[10px]">{{ student.emergency_contact }}</span></div>
                                 </div>
                             </div>

@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import Swal from 'sweetalert2';
 
 interface Subject {
     id: number;
@@ -61,9 +62,19 @@ function submitEdit() {
 }
 
 function deleteSubject(id: number) {
-    if (confirm('Are you sure you want to delete this subject? Academic results and teacher assignments using it might be affected.')) {
-        router.delete(`/subjects/${id}`);
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Are you sure you want to delete this subject? Academic results and teacher assignments using it might be affected.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#171717',
+        cancelButtonColor: '#dc2626',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(`/subjects/${id}`);
+        }
+    });
 }
 </script>
 

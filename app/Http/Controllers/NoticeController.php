@@ -16,8 +16,8 @@ class NoticeController extends Controller
      */
     public function index(): Response
     {
-        $notices = Notice::orderBy('publish_date', 'desc')->get();
-        
+        $notices = Notice::orderBy('publish_date', 'desc')->latest()->get();
+
         return Inertia::render('notices/Index', [
             'notices' => $notices,
         ]);
@@ -41,7 +41,7 @@ class NoticeController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'category' => 'required|string|in:exam,holiday,event,general,admission,urgent',
+            'category' => 'required|string|max:255',
             'publish_date' => 'required|date',
             'expiry_date' => 'nullable|date|after_or_equal:publish_date',
             'target_audience' => 'required|string|in:all,students,teachers,parents',
@@ -79,7 +79,7 @@ class NoticeController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'category' => 'required|string|in:exam,holiday,event,general,admission,urgent',
+            'category' => 'required|string|max:255',
             'publish_date' => 'required|date',
             'expiry_date' => 'nullable|date|after_or_equal:publish_date',
             'target_audience' => 'required|string|in:all,students,teachers,parents',

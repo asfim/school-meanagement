@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
 use App\Models\FeePayment;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,20 +19,32 @@ class FeeController extends Controller
         $class = $request->input('class', 'Class 6');
         $section = $request->input('section', 'A');
         $month = $request->input('month', date('Y-m'));
+        $search = $request->input('search');
 
-        $students = Student::where('class', $class)
-            ->where('section', $section)
-            ->orderBy('roll_number')
-            ->get();
+        $studentsQuery = Student::where('class', $class)
+            ->where('section', $section);
 
-        $studentIds = $students->pluck('id');
+        if ($request->filled('search')) {
+            $studentsQuery->where(function ($q) use ($search) {
+                $q->where('full_name_en', 'like', "%{$search}%")
+                    ->orWhere('student_id', 'like', "%{$search}%")
+                    ->orWhere('roll_number', 'like', "%{$search}%");
+            });
+        }
+
+        $students = $studentsQuery->orderBy('roll_number')
+            ->paginate(15)
+            ->withQueryString();
+
+        $studentIds = collect($students->items())->pluck('id');
         $payments = FeePayment::whereIn('student_id', $studentIds)
             ->where('fee_month', $month)
             ->get()
             ->keyBy('student_id');
 
-        $feeSheet = $students->map(function ($student) use ($payments) {
+        $feeSheetData = collect($students->items())->map(function ($student) use ($payments) {
             $pay = $payments->get($student->id);
+
             return [
                 'student_id' => $student->id,
                 'student_uid' => $student->student_id,
@@ -49,6 +61,8 @@ class FeeController extends Controller
             ];
         });
 
+        $feeSheet = $students->setCollection($feeSheetData);
+
         // Summary metrics
         $totalCollected = FeePayment::where('fee_month', $month)->sum('amount_paid');
         $totalDues = FeePayment::where('fee_month', $month)->where('status', '!=', 'paid')->sum('amount_due');
@@ -56,18 +70,19 @@ class FeeController extends Controller
 
         return Inertia::render('fees/Index', [
             'feeSheet' => $feeSheet,
-            'classes' => ['Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'],
+            'classes' => ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'],
             'sections' => ['A', 'B', 'C'],
             'currentFilters' => [
                 'class' => $class,
                 'section' => $section,
                 'month' => $month,
+                'search' => $search ?? '',
             ],
             'summary' => [
                 'total_collected' => $totalCollected,
                 'total_dues' => $totalDues,
                 'total_discounts' => $totalDiscounts,
-            ]
+            ],
         ]);
     }
 
@@ -77,7 +92,7 @@ class FeeController extends Controller
     public function billing(): Response
     {
         return Inertia::render('fees/Billing', [
-            'classes' => ['Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'],
+            'classes' => ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'],
         ]);
     }
 
@@ -97,15 +112,15 @@ class FeeController extends Controller
         $amount = $request->input('amount');
 
         $students = Student::where('class', $class)->where('status', 'active')->get();
-        
+
         $count = 0;
         foreach ($students as $student) {
             // Only create if not already exists
             $exists = FeePayment::where('student_id', $student->id)
                 ->where('fee_month', $month)
                 ->exists();
-                
-            if (!$exists) {
+
+            if (! $exists) {
                 FeePayment::create([
                     'student_id' => $student->id,
                     'fee_month' => $month,
@@ -137,14 +152,14 @@ class FeeController extends Controller
         ]);
 
         $payment = FeePayment::findOrFail($request->input('payment_id'));
-        
+
         $newDiscount = $request->input('discount');
         $newPaid = $request->input('amount_paid');
-        
+
         // Calculate new totals
         $totalPaid = $payment->amount_paid + $newPaid;
         $totalDiscount = $payment->discount + $newDiscount;
-        
+
         $status = 'unpaid';
         if ($totalPaid >= ($payment->amount_due - $totalDiscount)) {
             $status = 'paid';
@@ -159,7 +174,7 @@ class FeeController extends Controller
             $lastPayment = FeePayment::whereNotNull('receipt_number')->orderBy('id', 'desc')->first();
             $nextNum = 10001;
             if ($lastPayment !== null && preg_match('/REC-\d{4}-(\d+)/', $lastPayment->receipt_number, $matches)) {
-                $nextNum = (int)$matches[1] + 1;
+                $nextNum = (int) $matches[1] + 1;
             }
             $receiptNumber = "REC-{$year}-{$nextNum}";
         }
@@ -183,7 +198,7 @@ class FeeController extends Controller
     public function printReceipt(FeePayment $payment): Response
     {
         $payment->load('student');
-        
+
         return Inertia::render('fees/PrintReceipt', [
             'payment' => $payment,
         ]);

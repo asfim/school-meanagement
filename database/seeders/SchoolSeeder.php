@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Student;
-use App\Models\Teacher;
-use App\Models\Notice;
 use App\Models\ExamResult;
 use App\Models\FeePayment;
+use App\Models\Notice;
+use App\Models\Student;
+use App\Models\Subject;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,7 @@ class SchoolSeeder extends Seeder
     public function run(): void
     {
         // 1. Create default admin if not exists
-        if (!User::where('email', 'admin@school.com')->exists()) {
+        if (! User::where('email', 'admin@school.com')->exists()) {
             User::create([
                 'name' => 'School Admin',
                 'email' => 'admin@school.com',
@@ -42,7 +43,7 @@ class SchoolSeeder extends Seeder
         ];
 
         foreach ($defaultSubjects as $sub) {
-            \App\Models\Subject::updateOrCreate(['name' => $sub['name']], $sub);
+            Subject::updateOrCreate(['name' => $sub['name']], $sub);
         }
 
         // 2. Create Teachers
@@ -81,81 +82,114 @@ class SchoolSeeder extends Seeder
                 'email' => 'albert.science@school.com',
                 'subjects' => ['General Science', 'Physics'],
                 'classes' => ['Class 8', 'Class 9', 'Class 10'],
-            ]
+            ],
         ];
 
         $teachers = [];
         foreach ($teachersData as $idx => $t) {
-            $teachers[] = Teacher::factory()->create([
-                'full_name' => $t['full_name'],
-                'email' => $t['email'],
-                'designation' => $t['designation'],
-                'subjects' => $t['subjects'],
-                'classes' => $t['classes'],
-                'teacher_id' => 'TCH-' . date('Y') . '-' . sprintf('%04d', $idx + 1),
-            ]);
+            $teacherId = 'TCH-'.date('Y').'-'.sprintf('%04d', $idx + 1);
+            $existing = Teacher::where('teacher_id', $teacherId)->orWhere('email', $t['email'])->first();
+            if ($existing) {
+                $teachers[] = $existing;
+            } else {
+                $teachers[] = Teacher::factory()->create([
+                    'full_name' => $t['full_name'],
+                    'email' => $t['email'],
+                    'designation' => $t['designation'],
+                    'subjects' => $t['subjects'],
+                    'classes' => $t['classes'],
+                    'teacher_id' => $teacherId,
+                ]);
+            }
         }
 
         // 3. Create Students
-        $classes = ['Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'];
+        $classes = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'];
         $sections = ['A', 'B'];
         $students = [];
-        
+
         $studentCounter = 1;
         foreach ($classes as $class) {
             foreach ($sections as $section) {
                 // Create 3 students per class & section
                 for ($roll = 1; $roll <= 3; $roll++) {
-                    $students[] = Student::factory()->create([
-                        'class' => $class,
-                        'section' => $section,
-                        'roll_number' => $roll,
-                        'student_id' => 'STU-' . date('Y') . '-' . sprintf('%04d', $studentCounter++),
-                    ]);
+                    $studentId = 'STU-'.date('Y').'-'.sprintf('%04d', $studentCounter++);
+                    $existing = Student::where('student_id', $studentId)->first();
+                    if ($existing) {
+                        $students[] = $existing;
+                    } else {
+                        $students[] = Student::factory()->create([
+                            'class' => $class,
+                            'section' => $section,
+                            'roll_number' => $roll,
+                            'student_id' => $studentId,
+                        ]);
+                    }
                 }
             }
         }
 
         // 4. Create Exam Results
         $subjects = ['Mathematics', 'English', 'Science', 'Social Science'];
-        
+
         foreach ($students as $student) {
+            if (ExamResult::where('student_id', $student->id)->where('exam_name', 'First Term Exam')->exists()) {
+                continue;
+            }
+
             // Generate First Term Exam
             $marks = [];
             $totalGp = 0;
             $failed = false;
-            
+
             foreach ($subjects as $sub) {
                 $score = rand(40, 98); // ensure they pass at least
                 if (rand(1, 20) === 20) {
                     $score = rand(20, 32); // rarely fail
                 }
-                
+
                 $marks[$sub] = $score;
-                
+
                 // Subject GPA
-                if ($score >= 80) { $gp = 5.0; }
-                elseif ($score >= 70) { $gp = 4.0; }
-                elseif ($score >= 60) { $gp = 3.5; }
-                elseif ($score >= 50) { $gp = 3.0; }
-                elseif ($score >= 40) { $gp = 2.0; }
-                elseif ($score >= 33) { $gp = 1.0; }
-                else { $gp = 0.0; $failed = true; }
-                
+                if ($score >= 80) {
+                    $gp = 5.0;
+                } elseif ($score >= 70) {
+                    $gp = 4.0;
+                } elseif ($score >= 60) {
+                    $gp = 3.5;
+                } elseif ($score >= 50) {
+                    $gp = 3.0;
+                } elseif ($score >= 40) {
+                    $gp = 2.0;
+                } elseif ($score >= 33) {
+                    $gp = 1.0;
+                } else {
+                    $gp = 0.0;
+                    $failed = true;
+                }
+
                 $totalGp += $gp;
             }
-            
+
             $gpa = $failed ? 0.0 : round($totalGp / count($subjects), 2);
-            
+
             // Final Grade
-            if ($gpa >= 5.0) { $grade = 'A+'; }
-            elseif ($gpa >= 4.0) { $grade = 'A'; }
-            elseif ($gpa >= 3.5) { $grade = 'A-'; }
-            elseif ($gpa >= 3.0) { $grade = 'B'; }
-            elseif ($gpa >= 2.0) { $grade = 'C'; }
-            elseif ($gpa >= 1.0) { $grade = 'D'; }
-            else { $grade = 'F'; }
-            
+            if ($gpa >= 5.0) {
+                $grade = 'A+';
+            } elseif ($gpa >= 4.0) {
+                $grade = 'A';
+            } elseif ($gpa >= 3.5) {
+                $grade = 'A-';
+            } elseif ($gpa >= 3.0) {
+                $grade = 'B';
+            } elseif ($gpa >= 2.0) {
+                $grade = 'C';
+            } elseif ($gpa >= 1.0) {
+                $grade = 'D';
+            } else {
+                $grade = 'F';
+            }
+
             ExamResult::create([
                 'student_id' => $student->id,
                 'exam_name' => 'First Term Exam',
@@ -173,48 +207,72 @@ class SchoolSeeder extends Seeder
         // 5. Create Fee Payments
         $months = ['2026-05', '2026-06', '2026-07'];
         $receiptCounter = 10001;
-        
+
         foreach ($students as $student) {
             // Assign class monthly fee
             $monthlyFee = 1500;
             if ($student->class === 'Class 9' || $student->class === 'Class 10') {
                 $monthlyFee = 2000;
             }
-            
-            // Month 1: May (Paid)
-            FeePayment::create([
-                'student_id' => $student->id,
-                'fee_month' => '2026-05',
-                'amount_due' => $monthlyFee,
-                'amount_paid' => $monthlyFee,
-                'discount' => 0.00,
-                'payment_date' => date('Y-05-10'),
-                'payment_method' => 'cash',
-                'receipt_number' => 'REC-2026-' . ($receiptCounter++),
-                'status' => 'paid',
-                'remarks' => 'Paid in full.',
-            ]);
 
-            // Month 2: June (Paid with discount, or partial, or paid)
-            $isPaid = rand(1, 10) > 2; // 80% paid
-            if ($isPaid) {
-                $discount = rand(1, 10) === 10 ? 200.00 : 0.00;
+            // Month 1: May (Paid)
+            if (! FeePayment::where('student_id', $student->id)->where('fee_month', '2026-05')->exists()) {
                 FeePayment::create([
                     'student_id' => $student->id,
-                    'fee_month' => '2026-06',
-                    'amount_due' => $monthlyFee - $discount,
-                    'amount_paid' => $monthlyFee - $discount,
-                    'discount' => $discount,
-                    'payment_date' => date('Y-06-12'),
-                    'payment_method' => 'mobile_banking',
-                    'receipt_number' => 'REC-2026-' . ($receiptCounter++),
+                    'fee_month' => '2026-05',
+                    'amount_due' => $monthlyFee,
+                    'amount_paid' => $monthlyFee,
+                    'discount' => 0.00,
+                    'payment_date' => date('Y-05-10'),
+                    'payment_method' => 'cash',
+                    'receipt_number' => 'REC-2026-'.($receiptCounter++),
                     'status' => 'paid',
-                    'remarks' => $discount > 0 ? 'Discount applied.' : 'Paid in full.',
+                    'remarks' => 'Paid in full.',
                 ]);
             } else {
+                $receiptCounter++;
+            }
+
+            // Month 2: June (Paid with discount, or partial, or paid)
+            if (! FeePayment::where('student_id', $student->id)->where('fee_month', '2026-06')->exists()) {
+                $isPaid = rand(1, 10) > 2; // 80% paid
+                if ($isPaid) {
+                    $discount = rand(1, 10) === 10 ? 200.00 : 0.00;
+                    FeePayment::create([
+                        'student_id' => $student->id,
+                        'fee_month' => '2026-06',
+                        'amount_due' => $monthlyFee - $discount,
+                        'amount_paid' => $monthlyFee - $discount,
+                        'discount' => $discount,
+                        'payment_date' => date('Y-06-12'),
+                        'payment_method' => 'mobile_banking',
+                        'receipt_number' => 'REC-2026-'.($receiptCounter++),
+                        'status' => 'paid',
+                        'remarks' => $discount > 0 ? 'Discount applied.' : 'Paid in full.',
+                    ]);
+                } else {
+                    FeePayment::create([
+                        'student_id' => $student->id,
+                        'fee_month' => '2026-06',
+                        'amount_due' => $monthlyFee,
+                        'amount_paid' => 0,
+                        'discount' => 0,
+                        'payment_date' => null,
+                        'payment_method' => null,
+                        'receipt_number' => null,
+                        'status' => 'unpaid',
+                        'remarks' => 'Payment overdue.',
+                    ]);
+                }
+            } else {
+                $receiptCounter++;
+            }
+
+            // Month 3: July (Current Month - mostly Unpaid)
+            if (! FeePayment::where('student_id', $student->id)->where('fee_month', '2026-07')->exists()) {
                 FeePayment::create([
                     'student_id' => $student->id,
-                    'fee_month' => '2026-06',
+                    'fee_month' => '2026-07',
                     'amount_due' => $monthlyFee,
                     'amount_paid' => 0,
                     'discount' => 0,
@@ -222,68 +280,62 @@ class SchoolSeeder extends Seeder
                     'payment_method' => null,
                     'receipt_number' => null,
                     'status' => 'unpaid',
-                    'remarks' => 'Payment overdue.',
+                    'remarks' => 'Monthly billing generated.',
                 ]);
             }
-
-            // Month 3: July (Current Month - mostly Unpaid)
-            FeePayment::create([
-                'student_id' => $student->id,
-                'fee_month' => '2026-07',
-                'amount_due' => $monthlyFee,
-                'amount_paid' => 0,
-                'discount' => 0,
-                'payment_date' => null,
-                'payment_method' => null,
-                'receipt_number' => null,
-                'status' => 'unpaid',
-                'remarks' => 'Monthly billing generated.',
-            ]);
         }
 
         // 6. Create Notices
-        Notice::create([
-            'title' => 'First Term Exam Schedule 2026',
-            'description' => 'The First Term Examination for all classes (Class 6 - Class 10) will commence from August 1, 2026. Detailed schedules have been distributed to classroom coordinators. Please ensure all tuition dues are cleared prior to collecting admit cards.',
-            'category' => 'exam',
-            'publish_date' => date('Y-07-01'),
-            'expiry_date' => date('Y-08-15'),
-            'target_audience' => 'all',
-            'posted_by' => 'Exam Controller',
-            'status' => 'active',
-        ]);
+        if (! Notice::where('title', 'First Term Exam Schedule 2026')->exists()) {
+            Notice::create([
+                'title' => 'First Term Exam Schedule 2026',
+                'description' => 'The First Term Examination for all classes (Class 1 - Class 12) will commence from August 1, 2026. Detailed schedules have been distributed to classroom coordinators. Please ensure all tuition dues are cleared prior to collecting admit cards.',
+                'category' => 'exam',
+                'publish_date' => date('Y-07-01'),
+                'expiry_date' => date('Y-08-15'),
+                'target_audience' => 'all',
+                'posted_by' => 'Exam Controller',
+                'status' => 'active',
+            ]);
+        }
 
-        Notice::create([
-            'title' => 'Summer Vacation Holiday Notice',
-            'description' => 'This is to inform all students, parents, and teachers that the school will remain closed from July 15, 2026, to July 25, 2026, on account of the Summer Vacation. Regular school operations will resume on July 26, 2026.',
-            'category' => 'holiday',
-            'publish_date' => date('Y-07-10'),
-            'expiry_date' => date('Y-07-26'),
-            'target_audience' => 'all',
-            'posted_by' => 'Principal Office',
-            'status' => 'active',
-        ]);
+        if (! Notice::where('title', 'Summer Vacation Holiday Notice')->exists()) {
+            Notice::create([
+                'title' => 'Summer Vacation Holiday Notice',
+                'description' => 'This is to inform all students, parents, and teachers that the school will remain closed from July 15, 2026, to July 25, 2026, on account of the Summer Vacation. Regular school operations will resume on July 26, 2026.',
+                'category' => 'holiday',
+                'publish_date' => date('Y-07-10'),
+                'expiry_date' => date('Y-07-26'),
+                'target_audience' => 'all',
+                'posted_by' => 'Principal Office',
+                'status' => 'active',
+            ]);
+        }
 
-        Notice::create([
-            'title' => 'Teacher-Parent Meeting (PTM)',
-            'description' => 'A parent-teacher meeting is scheduled for Saturday, July 18, 2026, at the school auditorium from 10:00 AM to 1:00 PM. Parents are requested to attend to discuss their child\'s progress and review first term performance reports.',
-            'category' => 'event',
-            'publish_date' => date('Y-07-12'),
-            'expiry_date' => date('Y-07-19'),
-            'target_audience' => 'parents',
-            'posted_by' => 'Academic Coordinator',
-            'status' => 'active',
-        ]);
+        if (! Notice::where('title', 'Teacher-Parent Meeting (PTM)')->exists()) {
+            Notice::create([
+                'title' => 'Teacher-Parent Meeting (PTM)',
+                'description' => 'A parent-teacher meeting is scheduled for Saturday, July 18, 2026, at the school auditorium from 10:00 AM to 1:00 PM. Parents are requested to attend to discuss their child\'s progress and review first term performance reports.',
+                'category' => 'event',
+                'publish_date' => date('Y-07-12'),
+                'expiry_date' => date('Y-07-19'),
+                'target_audience' => 'parents',
+                'posted_by' => 'Academic Coordinator',
+                'status' => 'active',
+            ]);
+        }
 
-        Notice::create([
-            'title' => 'Admission Notice: Session 2026-27',
-            'description' => 'Online registrations for the upcoming academic session are now open for Class 6 to 9. The admission form, eligibility criteria, and fee structure details are available in the public downloads section. Last date for form submission is September 10, 2026.',
-            'category' => 'admission',
-            'publish_date' => date('Y-07-05'),
-            'expiry_date' => date('Y-09-10'),
-            'target_audience' => 'all',
-            'posted_by' => 'Admissions Office',
-            'status' => 'active',
-        ]);
+        if (! Notice::where('title', 'Admission Notice: Session 2026-27')->exists()) {
+            Notice::create([
+                'title' => 'Admission Notice: Session 2026-27',
+                'description' => 'Online registrations for the upcoming academic session are now open for Class 6 to 9. The admission form, eligibility criteria, and fee structure details are available in the public downloads section. Last date for form submission is September 10, 2026.',
+                'category' => 'admission',
+                'publish_date' => date('Y-07-05'),
+                'expiry_date' => date('Y-09-10'),
+                'target_audience' => 'all',
+                'posted_by' => 'Admissions Office',
+                'status' => 'active',
+            ]);
+        }
     }
 }

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
 use App\Models\ExamResult;
+use App\Models\Student;
+use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,20 +20,32 @@ class ResultController extends Controller
         $class = $request->input('class', 'Class 6');
         $section = $request->input('section', 'A');
         $examName = $request->input('exam_name', 'First Term Exam');
+        $search = $request->input('search');
 
-        $students = Student::where('class', $class)
-            ->where('section', $section)
-            ->orderBy('roll_number')
-            ->get();
+        $studentsQuery = Student::where('class', $class)
+            ->where('section', $section);
 
-        $studentIds = $students->pluck('id');
+        if ($request->filled('search')) {
+            $studentsQuery->where(function ($q) use ($search) {
+                $q->where('full_name_en', 'like', "%{$search}%")
+                    ->orWhere('student_id', 'like', "%{$search}%")
+                    ->orWhere('roll_number', 'like', "%{$search}%");
+            });
+        }
+
+        $students = $studentsQuery->orderBy('roll_number')
+            ->paginate(15)
+            ->withQueryString();
+
+        $studentIds = collect($students->items())->pluck('id');
         $results = ExamResult::whereIn('student_id', $studentIds)
             ->where('exam_name', $examName)
             ->get()
             ->keyBy('student_id');
 
-        $reportCard = $students->map(function ($student) use ($results) {
+        $reportCardData = collect($students->items())->map(function ($student) use ($results) {
             $res = $results->get($student->id);
+
             return [
                 'student_id' => $student->id,
                 'student_uid' => $student->student_id,
@@ -46,16 +59,19 @@ class ResultController extends Controller
             ];
         });
 
+        $reportCard = $students->setCollection($reportCardData);
+
         return Inertia::render('results/Index', [
             'reportCard' => $reportCard,
-            'classes' => ['Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'],
+            'classes' => ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'],
             'sections' => ['A', 'B', 'C'],
             'examNames' => ['First Term Exam', 'Midterm Exam', 'Annual Exam'],
             'currentFilters' => [
                 'class' => $class,
                 'section' => $section,
                 'exam_name' => $examName,
-            ]
+                'search' => $search ?? '',
+            ],
         ]);
     }
 
@@ -80,7 +96,7 @@ class ResultController extends Controller
             ->keyBy('student_id');
 
         // Let's load subjects dynamically from database
-        $subjects = \App\Models\Subject::orderBy('name')->pluck('name')->toArray();
+        $subjects = Subject::orderBy('name')->pluck('name')->toArray();
         if (empty($subjects)) {
             $subjects = ['Mathematics', 'English', 'Science', 'Social Science'];
         }
@@ -88,7 +104,7 @@ class ResultController extends Controller
         $marksSheet = $students->map(function ($student) use ($results, $subjects) {
             $res = $results->get($student->id);
             $marks = $res ? $res->marks : array_fill_keys($subjects, '');
-            
+
             return [
                 'student_id' => $student->id,
                 'student_uid' => $student->student_id,
@@ -130,30 +146,39 @@ class ResultController extends Controller
         foreach ($request->input('results') as $record) {
             $studentId = $record['student_id'];
             $marks = $record['marks']; // Subject -> Marks map
-            
+
             $totalGp = 0;
             $failed = false;
             $subjectCount = 0;
-            
+
             $parsedMarks = [];
             foreach ($marks as $subject => $score) {
                 if ($score === '' || $score === null) {
                     continue; // Skip unfilled marks
                 }
-                
-                $score = (int)$score;
+
+                $score = (int) $score;
                 $parsedMarks[$subject] = $score;
                 $subjectCount++;
-                
+
                 // Subject Grade Point
-                if ($score >= 80) { $gp = 5.0; }
-                elseif ($score >= 70) { $gp = 4.0; }
-                elseif ($score >= 60) { $gp = 3.5; }
-                elseif ($score >= 50) { $gp = 3.0; }
-                elseif ($score >= 40) { $gp = 2.0; }
-                elseif ($score >= 33) { $gp = 1.0; }
-                else { $gp = 0.0; $failed = true; }
-                
+                if ($score >= 80) {
+                    $gp = 5.0;
+                } elseif ($score >= 70) {
+                    $gp = 4.0;
+                } elseif ($score >= 60) {
+                    $gp = 3.5;
+                } elseif ($score >= 50) {
+                    $gp = 3.0;
+                } elseif ($score >= 40) {
+                    $gp = 2.0;
+                } elseif ($score >= 33) {
+                    $gp = 1.0;
+                } else {
+                    $gp = 0.0;
+                    $failed = true;
+                }
+
                 $totalGp += $gp;
             }
 
@@ -164,13 +189,21 @@ class ResultController extends Controller
             $gpa = $failed ? 0.0 : round($totalGp / $subjectCount, 2);
 
             // Overall Grade
-            if ($gpa >= 5.0) { $grade = 'A+'; }
-            elseif ($gpa >= 4.0) { $grade = 'A'; }
-            elseif ($gpa >= 3.5) { $grade = 'A-'; }
-            elseif ($gpa >= 3.0) { $grade = 'B'; }
-            elseif ($gpa >= 2.0) { $grade = 'C'; }
-            elseif ($gpa >= 1.0) { $grade = 'D'; }
-            else { $grade = 'F'; }
+            if ($gpa >= 5.0) {
+                $grade = 'A+';
+            } elseif ($gpa >= 4.0) {
+                $grade = 'A';
+            } elseif ($gpa >= 3.5) {
+                $grade = 'A-';
+            } elseif ($gpa >= 3.0) {
+                $grade = 'B';
+            } elseif ($gpa >= 2.0) {
+                $grade = 'C';
+            } elseif ($gpa >= 1.0) {
+                $grade = 'D';
+            } else {
+                $grade = 'F';
+            }
 
             ExamResult::updateOrCreate(
                 [
@@ -202,7 +235,7 @@ class ResultController extends Controller
     public function print(ExamResult $result): Response
     {
         $result->load('student');
-        
+
         return Inertia::render('results/PrintMarksheet', [
             'result' => $result,
         ]);

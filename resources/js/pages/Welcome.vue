@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import FlashToast from '@/components/FlashToast.vue';
 
 interface Notice {
     id: number;
@@ -117,6 +118,7 @@ function getSubjectGrade(score: number): string {
 
 <template>
     <Head title="Welcome to Antigravity Model School" />
+    <FlashToast />
 
     <div class="min-h-screen bg-[#FDFDFC] dark:bg-[#0a0a0a] text-neutral-800 dark:text-neutral-250 font-sans flex flex-col justify-between">
         <!-- Main Navbar -->
@@ -284,7 +286,7 @@ function getSubjectGrade(score: number): string {
                                 </div>
                                 <div class="text-right">
                                     <div>Exam: <span class="font-bold">{{ resultData.result.exam_name }}</span></div>
-                                    <div>Roll Number: <span class="font-semibold">#{{ resultData.student.roll_number }}</span></div>
+                                    <div>Roll Number: <span class="font-semibold">{{ resultData.student.roll_number }}</span></div>
                                     <div>Status: 
                                         <span class="ml-1 inline-flex px-1.5 py-0.2 rounded text-[10px] font-bold" :class="resultData.result.pass_status === 'pass' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                                             {{ resultData.result.pass_status.toUpperCase() }}
@@ -386,7 +388,7 @@ function getSubjectGrade(score: number): string {
                                 </div>
                                 <div class="text-right">
                                     <div>Student ID: <span class="font-bold font-mono">{{ feeData.student.student_id }}</span></div>
-                                    <div>Roll Number: <span class="font-semibold">#{{ feeData.student.roll_number }}</span></div>
+                                    <div>Roll Number: <span class="font-semibold">{{ feeData.student.roll_number }}</span></div>
                                 </div>
                             </div>
 

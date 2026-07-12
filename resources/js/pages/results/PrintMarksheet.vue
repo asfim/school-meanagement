@@ -90,7 +90,7 @@ function getSubjectGrade(score: number): string {
                 </div>
                 <div class="text-right">
                     <div><span class="text-neutral-500">Exam:</span> <span class="font-bold">{{ result.exam_name }}</span></div>
-                    <div><span class="text-neutral-500">Roll Number:</span> <span class="font-bold">#{{ result.student.roll_number }}</span></div>
+                    <div><span class="text-neutral-500">Roll Number:</span> <span class="font-bold">{{ result.student.roll_number }}</span></div>
                     <div><span class="text-neutral-500">Date Issued:</span> <span class="font-bold">{{ new Date().toLocaleDateString() }}</span></div>
                 </div>
             </div>

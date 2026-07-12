@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, watch, onMounted } from 'vue';
 
 interface Notice {
     id: number;
     title: string;
     description: string;
-    category: 'exam' | 'holiday' | 'event' | 'general' | 'admission' | 'urgent';
+    category: string;
     publish_date: string;
     expiry_date: string | null;
     target_audience: 'all' | 'students' | 'teachers' | 'parents';
@@ -29,6 +30,25 @@ const form = useForm({
     target_audience: props.notice?.target_audience || 'all',
     status: props.notice?.status || 'active',
 });
+
+const standardCategories = ['general', 'exam', 'holiday', 'event', 'admission', 'urgent'];
+const selectedCategory = ref(props.notice?.category || 'general');
+const customCategory = ref('');
+
+onMounted(() => {
+    if (props.notice && !standardCategories.includes(props.notice.category)) {
+        selectedCategory.value = 'custom';
+        customCategory.value = props.notice.category;
+    }
+});
+
+watch([selectedCategory, customCategory], () => {
+    if (selectedCategory.value === 'custom') {
+        form.category = customCategory.value;
+    } else {
+        form.category = selectedCategory.value;
+    }
+}, { immediate: true });
 
 function submit() {
     if (isEdit) {
@@ -78,15 +98,20 @@ const breadcrumbs = [
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-semibold mb-1">Category *</label>
-                        <select v-model="form.category" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                        <select v-model="selectedCategory" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
                             <option value="general">General Circular</option>
                             <option value="exam">Exam Schedule</option>
                             <option value="holiday">Holiday Notice</option>
                             <option value="event">School Event</option>
                             <option value="admission">Admissions Notice</option>
                             <option value="urgent">Urgent Announcement</option>
+                            <option value="custom">+ Add Custom Category...</option>
                         </select>
                         <span v-if="form.errors.category" class="text-xs text-red-500">{{ form.errors.category }}</span>
+
+                        <div v-if="selectedCategory === 'custom'" class="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <input v-model="customCategory" type="text" placeholder="Type custom category name..." class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none" required />
+                        </div>
                     </div>
 
                     <div>
