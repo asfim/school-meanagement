@@ -1,16 +1,18 @@
 <?php
 
+use App\Http\Controllers\BannerController;
 use App\Http\Controllers\FeeController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\PublicNoticeController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\StudentController;
-use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [PublicNoticeController::class, 'welcome'])->name('home');
+Route::get('/result', [PublicNoticeController::class, 'result'])->name('public.result');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
@@ -41,6 +43,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Notices
     Route::resource('notices', NoticeController::class);
+
+    // Banners
+    Route::resource('banners', BannerController::class)->except(['show']);
 
     // Subjects
     Route::resource('subjects', SubjectController::class);
