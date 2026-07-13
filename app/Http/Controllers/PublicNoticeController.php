@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Banner;
+use App\Models\CampusLifeItem;
 use App\Models\ExamResult;
 use App\Models\FeePayment;
 use App\Models\Notice;
@@ -20,6 +21,9 @@ class PublicNoticeController extends Controller
     {
         // 1. Get active banners for the slider
         $banners = Banner::active()->get();
+
+        // 2. Get active campus life gallery items
+        $campusLifeItems = CampusLifeItem::active()->get();
 
         // 2. Get active notices
         $today = date('Y-m-d');
@@ -81,13 +85,14 @@ class PublicNoticeController extends Controller
         }
 
         return Inertia::render('Welcome', [
-            'notices' => $notices,
-            'banners' => $banners,
-            'resultData' => $resultData,
-            'resultError' => $resultError,
-            'feeData' => $feeData,
-            'feeError' => $feeError,
-            'filters' => $request->only(['result_student_id', 'result_exam_name', 'fee_student_id']),
+            'notices'         => $notices,
+            'banners'         => $banners,
+            'campusLifeItems' => $campusLifeItems,
+            'resultData'      => $resultData,
+            'resultError'     => $resultError,
+            'feeData'         => $feeData,
+            'feeError'        => $feeError,
+            'filters'         => $request->only(['result_student_id', 'result_exam_name', 'fee_student_id']),
         ]);
     }
 

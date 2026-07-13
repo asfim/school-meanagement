@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\CampusLifeController;
 use App\Http\Controllers\FeeController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\PublicNoticeController;
@@ -46,6 +47,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Banners
     Route::resource('banners', BannerController::class)->except(['show']);
+
+    // Campus Life
+    Route::resource('campus-life', CampusLifeController::class)->except(['show']);
 
     // Subjects
     Route::resource('subjects', SubjectController::class);

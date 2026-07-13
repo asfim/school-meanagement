@@ -57,9 +57,19 @@ interface FeePayment {
     payment_date: string | null;
 }
 
+interface CampusLifeItem {
+    id: number;
+    title: string;
+    description: string | null;
+    image_path: string | null;
+    sort_order: number;
+    is_active: boolean;
+}
+
 const props = defineProps<{
     banners: Banner[];
     notices: Notice[];
+    campusLifeItems: CampusLifeItem[];
     resultData: { student: Student; result: ExamResult } | null;
     resultError: string | null;
     feeData: { student: Student; payments: FeePayment[] } | null;
@@ -620,17 +630,27 @@ function getSubjectGrade(score: number): string {
         </section>
 
         <!-- ── Campus Gallery ─────────────────────────────────────── -->
-        <section class="sv-gallery">
+        <section class="sv-gallery" id="campus-life">
             <div class="sv-programs-inner">
                 <div class="sv-section-label">
                     <h2>Campus Life</h2>
                     <span>Moments at a glance</span>
                 </div>
-                <div class="sv-gallery-grid">
-                    <div class="sv-gtile sv-g1"><span>Annual Sports Day</span></div>
-                    <div class="sv-gtile sv-g2"><span>Science Fair 2026</span></div>
-                    <div class="sv-gtile sv-g3"><span>Library &amp; Reading Room</span></div>
-                    <div class="sv-gtile sv-g4"><span>Cultural Program</span></div>
+                <div v-if="campusLifeItems.length === 0" class="sv-empty-state" style="grid-column:1/-1">
+                    No gallery items yet. Admin can add them from the dashboard.
+                </div>
+                <div class="sv-gallery-grid" v-else>
+                    <div
+                        v-for="(item, i) in campusLifeItems"
+                        :key="item.id"
+                        class="sv-gtile"
+                        :class="['sv-g' + (i + 1), { 'sv-has-image': item.image_path }]"
+                        :style="item.image_path
+                            ? { backgroundImage: `url('/storage/${item.image_path}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                            : {}"
+                    >
+                        <span>{{ item.title }}</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -755,7 +775,8 @@ a { color: inherit; text-decoration: none; }
     position: relative;
     overflow: hidden;
     z-index: 1;
-    min-height: 280px;
+    min-height: 500px;
+    max-height: 500px;
     transition: background 0.6s ease;
 }
 .sv-hero-deco {
@@ -1064,6 +1085,9 @@ a { color: inherit; text-decoration: none; }
 .sv-gtile span { position: relative; z-index: 1; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
 .sv-gtile::before { content: ''; position: absolute; inset: 0; opacity: 0.9; transition: opacity .3s; }
 .sv-gtile:hover::before { opacity: 1; }
+/* Tiles with a real image: light black overlay, no gradient/hover */
+.sv-gtile.sv-has-image::before { background: rgba(0,0,0,0.28); opacity: 1; }
+.sv-gtile.sv-has-image:hover::before { opacity: 1; }
 .sv-g1 { grid-row: 1/3; }
 .sv-g1::before { background: linear-gradient(160deg, #2c5f47, #173A2C); }
 .sv-g2::before { background: linear-gradient(160deg, #3B5FA0, #1F3A63); }
