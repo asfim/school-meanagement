@@ -33,7 +33,6 @@ class TeacherFactory extends Factory
                 'M.A. in History, B.Ed.',
             ]),
             'subjects' => fake()->randomElements(['Mathematics', 'English', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'Social Science'], 2),
-            'classes' => fake()->randomElements(['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'], 3),
             'date_of_joining' => fake()->dateTimeBetween('-10 years', '-1 years')->format('Y-m-d'),
             'designation' => fake()->randomElement(['Assistant Teacher', 'Senior Teacher', 'Lecturer', 'Head of Department']),
             'salary_structure' => [

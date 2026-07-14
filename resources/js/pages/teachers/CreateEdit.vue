@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+
+interface Program {
+    id: number;
+    name: string;
+    subjects: { id: number; name: string }[];
+}
 
 interface Teacher {
     id: number;
@@ -12,7 +18,6 @@ interface Teacher {
     email: string;
     qualifications: string;
     subjects: string[];
-    classes: string[];
     date_of_joining: string;
     designation: string;
     salary_structure: {
@@ -26,15 +31,10 @@ interface Teacher {
 
 const props = defineProps<{
     teacher: Teacher | null;
-    subjectsList: string[];
+    programs: Program[];
 }>();
 
 const isEdit = !!props.teacher;
-
-const availableSubjects = props.subjectsList && props.subjectsList.length > 0
-    ? props.subjectsList
-    : ['Mathematics', 'English', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'Social Science'];
-const availableClasses = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'];
 
 const form = useForm({
     _method: isEdit ? 'PUT' : 'POST',
@@ -44,7 +44,6 @@ const form = useForm({
     email: props.teacher?.email || '',
     qualifications: props.teacher?.qualifications || '',
     subjects: props.teacher?.subjects || [] as string[],
-    classes: props.teacher?.classes || [] as string[],
     date_of_joining: props.teacher ? new Date(props.teacher.date_of_joining).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     designation: props.teacher?.designation || '',
     salary_structure: {
@@ -57,6 +56,33 @@ const form = useForm({
 });
 
 const photoPreview = ref<string | null>(null);
+
+const selectedProgramId = ref('');
+
+const filteredSubjects = ref<{ id: number; name: string }[]>([]);
+
+function onProgramChange() {
+    const program = props.programs.find(p => String(p.id) === selectedProgramId.value);
+    filteredSubjects.value = program?.subjects || [];
+    form.subjects = [];
+}
+
+watch(
+    () => [props.teacher, props.programs] as const,
+    ([teacher, programs]) => {
+        if (teacher && teacher.subjects && teacher.subjects.length > 0 && programs.length > 0) {
+            const matchedProgram = programs.find(program =>
+                program.subjects.some(subject => teacher.subjects.includes(subject.name))
+            );
+
+            if (matchedProgram) {
+                selectedProgramId.value = String(matchedProgram.id);
+                filteredSubjects.value = matchedProgram.subjects;
+            }
+        }
+    },
+    { immediate: true }
+);
 
 function selectPhoto(e: Event) {
     const files = (e.target as HTMLInputElement).files;
@@ -79,6 +105,15 @@ function submit() {
         form.post('/teachers', {
             onSuccess: () => {},
         });
+    }
+}
+
+function toggleSubject(subjectName: string) {
+    const idx = form.subjects.indexOf(subjectName);
+    if (idx === -1) {
+        form.subjects.push(subjectName);
+    } else {
+        form.subjects.splice(idx, 1);
     }
 }
 
@@ -167,30 +202,44 @@ const breadcrumbs = [
                     <span v-if="form.errors.address" class="text-xs text-red-500 block mt-1">{{ form.errors.address }}</span>
                 </div>
 
-                <!-- Assignment Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Subject Checkbox Matrix -->
-                    <div class="p-4 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-                        <label class="block text-sm font-bold mb-2">Subject Assignment *</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label v-for="sub in availableSubjects" :key="sub" class="inline-flex items-center gap-2 text-sm cursor-pointer">
-                                <input type="checkbox" :value="sub" v-model="form.subjects" />
-                                <span>{{ sub }}</span>
-                            </label>
+                <!-- Program & Subject Assignment -->
+                <div>
+                    <h2 class="text-lg font-bold border-b border-neutral-100 dark:border-neutral-800 pb-2 text-neutral-900 dark:text-neutral-100">Subject Assignment *</h2>
+                    <p class="text-xs text-neutral-500 mt-1 mb-3">Select the academic program, then choose the subjects this teacher will teach.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Academic Program *</label>
+                            <select
+                                v-model="selectedProgramId"
+                                @change="onProgramChange"
+                                class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none"
+                            >
+                                <option value="">Select a program</option>
+                                <option v-for="program in programs" :key="program.id" :value="String(program.id)">{{ program.name }}</option>
+                            </select>
                         </div>
-                        <span v-if="form.errors.subjects" class="text-xs text-red-500 block mt-2">{{ form.errors.subjects }}</span>
-                    </div>
-
-                    <!-- Classes Checkbox Matrix -->
-                    <div class="p-4 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-                        <label class="block text-sm font-bold mb-2">Class Assignment *</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label v-for="cl in availableClasses" :key="cl" class="inline-flex items-center gap-2 text-sm cursor-pointer">
-                                <input type="checkbox" :value="cl" v-model="form.classes" />
-                                <span>{{ cl }}</span>
-                            </label>
+                        <div v-if="selectedProgramId">
+                            <label class="block text-sm font-medium mb-1">Subjects *</label>
+                            <div class="p-4 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg max-h-48 overflow-y-auto">
+                                <div v-if="filteredSubjects.length > 0" class="grid grid-cols-1 gap-2">
+                                    <label v-for="sub in filteredSubjects" :key="sub.id" class="inline-flex items-center gap-2 text-sm cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            :value="sub.name"
+                                            :checked="form.subjects.includes(sub.name)"
+                                            @change="toggleSubject(sub.name)"
+                                            class="rounded border-neutral-300"
+                                        />
+                                        <span>{{ sub.name }}</span>
+                                    </label>
+                                </div>
+                                <div v-else class="text-xs text-neutral-500">No subjects under this program.</div>
+                            </div>
+                            <span v-if="form.errors.subjects" class="text-xs text-red-500 block mt-1">{{ form.errors.subjects }}</span>
                         </div>
-                        <span v-if="form.errors.classes" class="text-xs text-red-500 block mt-2">{{ form.errors.classes }}</span>
+                        <div v-else class="md:col-span-2">
+                            <div class="p-4 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg text-xs text-neutral-500">Please select an academic program first to see available subjects.</div>
+                        </div>
                     </div>
                 </div>
 

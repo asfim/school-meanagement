@@ -12,7 +12,7 @@ interface Teacher {
     email: string;
     mobile: string;
     subjects: string[];
-    classes: string[];
+    program_names: string[];
 }
 
 const props = defineProps<{
@@ -121,22 +121,22 @@ function deleteTeacher(id: number) {
                             <div><span class="text-neutral-400">Mobile:</span> <span class="font-medium text-neutral-800 dark:text-neutral-200">{{ teacher.mobile }}</span></div>
                         </div>
 
+                        <!-- Program -->
+                        <div v-if="teacher.program_names && teacher.program_names.length > 0">
+                            <span class="text-xs font-semibold text-neutral-400 block mb-1">Program</span>
+                            <div class="flex flex-wrap gap-1">
+                                <span v-for="prog in teacher.program_names" :key="prog" class="inline-flex px-2 py-0.5 rounded text-xs bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium">
+                                    {{ prog }}
+                                </span>
+                            </div>
+                        </div>
+
                         <!-- Assigned Subjects -->
                         <div>
                             <span class="text-xs font-semibold text-neutral-400 block mb-1">Subjects Taught</span>
                             <div class="flex flex-wrap gap-1">
                                 <span v-for="sub in teacher.subjects" :key="sub" class="inline-flex px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-900 font-medium">
                                     {{ sub }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Assigned Classes -->
-                        <div>
-                            <span class="text-xs font-semibold text-neutral-400 block mb-1">Assigned Classes</span>
-                            <div class="flex flex-wrap gap-1">
-                                <span v-for="cl in teacher.classes" :key="cl" class="inline-flex px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-900 font-medium">
-                                    {{ cl }}
                                 </span>
                             </div>
                         </div>

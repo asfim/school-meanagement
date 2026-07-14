@@ -31,6 +31,19 @@ class TeacherController extends Controller
 
         $teachers = $query->orderBy('full_name')->get();
 
+        $subjectsWithPrograms = \App\Models\Subject::with('program')->get();
+
+        $teachers->each(function ($teacher) use ($subjectsWithPrograms) {
+            $programNames = [];
+            foreach ($teacher->subjects as $subjectName) {
+                $subject = $subjectsWithPrograms->firstWhere('name', $subjectName);
+                if ($subject && $subject->program) {
+                    $programNames[] = $subject->program->name;
+                }
+            }
+            $teacher->program_names = array_values(array_unique($programNames));
+        });
+
         return Inertia::render('teachers/Index', [
             'teachers' => $teachers,
             'filters' => $request->only(['search']),
@@ -62,7 +75,6 @@ class TeacherController extends Controller
             'email' => 'required|email|unique:teachers,email',
             'qualifications' => 'required|string',
             'subjects' => 'required|array',
-            'classes' => 'required|array',
             'date_of_joining' => 'required|date',
             'designation' => 'required|string|max:255',
             'salary_structure.base_salary' => 'required|numeric|min:0',
@@ -97,9 +109,11 @@ class TeacherController extends Controller
      */
     public function edit(Teacher $teacher): Response
     {
+        $programs = \App\Models\Program::with('subjects')->orderBy('name')->get();
+
         return Inertia::render('teachers/CreateEdit', [
             'teacher' => $teacher,
-            'subjectsList' => Subject::orderBy('name')->pluck('name')->toArray(),
+            'programs' => $programs,
         ]);
     }
 
@@ -115,7 +129,6 @@ class TeacherController extends Controller
             'email' => 'required|email|unique:teachers,email,'.$teacher->id,
             'qualifications' => 'required|string',
             'subjects' => 'required|array',
-            'classes' => 'required|array',
             'date_of_joining' => 'required|date',
             'designation' => 'required|string|max:255',
             'salary_structure.base_salary' => 'required|numeric|min:0',

@@ -10,11 +10,6 @@ class Teacher extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'teacher_id',
         'full_name',
@@ -23,7 +18,6 @@ class Teacher extends Model
         'email',
         'qualifications',
         'subjects',
-        'classes',
         'date_of_joining',
         'designation',
         'salary_structure',
@@ -31,27 +25,16 @@ class Teacher extends Model
         'photo_path',
     ];
 
-    /**
-     * Get the casts structure.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'dob' => 'date',
             'date_of_joining' => 'date',
             'subjects' => 'array',
-            'classes' => 'array',
             'salary_structure' => 'array',
         ];
     }
 
-    /**
-     * Get the attendance history for this teacher.
-     *
-     * @return HasMany<TeacherAttendance, $this>
-     */
     public function attendances(): HasMany
     {
         return $this->hasMany(TeacherAttendance::class);
