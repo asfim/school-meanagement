@@ -62,6 +62,7 @@ test('admin can register a teacher and generate a unique teacher ID', function (
         'mobile' => '01811122233',
         'email' => 'alan@school.com',
         'qualifications' => 'B.Sc., M.Sc.',
+        'program_name' => 'Science',
         'subjects' => ['Mathematics'],
         'date_of_joining' => '2020-01-01',
         'designation' => 'Lecturer',

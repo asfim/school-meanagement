@@ -17,6 +17,7 @@ class Teacher extends Model
         'mobile',
         'email',
         'qualifications',
+        'program_name',
         'subjects',
         'date_of_joining',
         'designation',

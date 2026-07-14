@@ -43,6 +43,7 @@ const form = useForm({
     mobile: props.teacher?.mobile || '',
     email: props.teacher?.email || '',
     qualifications: props.teacher?.qualifications || '',
+    program_name: props.teacher?.program_name || '',
     subjects: props.teacher?.subjects || [] as string[],
     date_of_joining: props.teacher ? new Date(props.teacher.date_of_joining).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     designation: props.teacher?.designation || '',
@@ -65,6 +66,7 @@ function onProgramChange() {
     const program = props.programs.find(p => String(p.id) === selectedProgramId.value);
     filteredSubjects.value = program?.subjects || [];
     form.subjects = [];
+    form.program_name = program?.name || '';
 }
 
 watch(
@@ -78,6 +80,7 @@ watch(
             if (matchedProgram) {
                 selectedProgramId.value = String(matchedProgram.id);
                 filteredSubjects.value = matchedProgram.subjects;
+                form.program_name = matchedProgram.name;
             }
         }
     },
