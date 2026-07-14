@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Program;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,12 +14,21 @@ class SubjectController extends Controller
     /**
      * Display a listing of subjects.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $subjects = Subject::orderBy('name')->get();
+        $query = Subject::query()->with('program');
+
+        if ($request->filled('program_id')) {
+            $query->where('program_id', $request->input('program_id'));
+        }
+
+        $subjects = $query->orderBy('name')->get();
+        $programs = Program::orderBy('name')->get();
 
         return Inertia::render('subjects/Index', [
             'subjects' => $subjects,
+            'programs' => $programs,
+            'filters' => $request->only(['program_id']),
         ]);
     }
 
@@ -30,6 +40,7 @@ class SubjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:subjects,name',
             'code' => 'nullable|string|max:50|unique:subjects,code',
+            'program_id' => 'nullable|exists:programs,id',
         ]);
 
         Subject::create($validated);
@@ -43,8 +54,9 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:subjects,name,' . $subject->id,
-            'code' => 'nullable|string|max:50|unique:subjects,code,' . $subject->id,
+            'name' => 'required|string|max:255|unique:subjects,name,'.$subject->id,
+            'code' => 'nullable|string|max:50|unique:subjects,code,'.$subject->id,
+            'program_id' => 'nullable|exists:programs,id',
         ]);
 
         $subject->update($validated);

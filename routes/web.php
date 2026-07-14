@@ -4,6 +4,7 @@ use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CampusLifeController;
 use App\Http\Controllers\FeeController;
 use App\Http\Controllers\NoticeController;
+use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\PublicNoticeController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\StudentController;
@@ -53,6 +54,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Subjects
     Route::resource('subjects', SubjectController::class);
+
+    // Programs
+    Route::resource('programs', ProgramController::class);
 });
 
 require __DIR__.'/settings.php';

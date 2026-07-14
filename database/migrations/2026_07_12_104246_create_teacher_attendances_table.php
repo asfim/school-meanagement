@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('status'); // present, absent, late, leave
             $table->string('remarks')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['teacher_id', 'date']);
         });
     }

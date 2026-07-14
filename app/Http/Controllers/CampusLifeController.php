@@ -28,11 +28,11 @@ class CampusLifeController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'sort_order'  => ['required', 'integer', 'min:0'],
-            'is_active'   => ['boolean'],
-            'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'sort_order' => ['required', 'integer', 'min:0'],
+            'is_active' => ['boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
         ]);
 
         if ($request->hasFile('image')) {
@@ -56,12 +56,12 @@ class CampusLifeController extends Controller
     public function update(Request $request, CampusLifeItem $item): RedirectResponse
     {
         $validated = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'sort_order'  => ['required', 'integer', 'min:0'],
-            'is_active'   => ['boolean'],
-            'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
-            'remove_image'  => ['boolean'],
+            'sort_order' => ['required', 'integer', 'min:0'],
+            'is_active' => ['boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'remove_image' => ['boolean'],
         ]);
 
         if (! empty($validated['remove_image']) && $item->image_path) {

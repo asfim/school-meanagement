@@ -4,14 +4,23 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import Swal from 'sweetalert2';
 
+interface Program {
+    id: number;
+    name: string;
+}
+
 interface Subject {
     id: number;
     name: string;
     code: string | null;
+    program_id: number | null;
+    program?: Program;
 }
 
 const props = defineProps<{
     subjects: Subject[];
+    programs: Program[];
+    filters: { program_id?: string };
 }>();
 
 const showAddModal = ref(false);
@@ -21,16 +30,18 @@ const editingSubject = ref<Subject | null>(null);
 const addForm = useForm({
     name: '',
     code: '',
+    program_id: '',
 });
 
 const editForm = useForm({
     name: '',
     code: '',
+    program_id: '',
 });
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Subjects', href: '/subjects' },
+    { title: 'Subjects Registry', href: '/subjects' },
 ];
 
 function submitAdd() {
@@ -38,6 +49,7 @@ function submitAdd() {
         onSuccess: () => {
             showAddModal.value = false;
             addForm.reset();
+            addForm.program_id = '';
         }
     });
 }
@@ -46,6 +58,7 @@ function openEditModal(sub: Subject) {
     editingSubject.value = sub;
     editForm.name = sub.name;
     editForm.code = sub.code || '';
+    editForm.program_id = sub.program_id ? String(sub.program_id) : '';
     showEditModal.value = true;
 }
 
@@ -56,9 +69,14 @@ function submitEdit() {
                 showEditModal.value = false;
                 editingSubject.value = null;
                 editForm.reset();
+                editForm.program_id = '';
             }
         });
     }
+}
+
+function filterByProgram() {
+    router.get('/subjects', { program_id: props.filters.program_id || '' }, { preserveState: true });
 }
 
 function deleteSubject(id: number) {
@@ -98,6 +116,18 @@ function deleteSubject(id: number) {
                 </div>
             </div>
 
+            <div class="flex items-center gap-3">
+                <label class="text-xs font-semibold text-neutral-500">Filter by Program:</label>
+                <select
+                    v-model="filters.program_id"
+                    @change="filterByProgram"
+                    class="rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none"
+                >
+                    <option value="">All Programs</option>
+                    <option v-for="prog in programs" :key="prog.id" :value="String(prog.id)">{{ prog.name }}</option>
+                </select>
+            </div>
+
             <!-- Subject Grid list -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
@@ -108,6 +138,7 @@ function deleteSubject(id: number) {
                     <div>
                         <span class="text-xs font-mono font-bold text-neutral-450 tracking-wider block">{{ sub.code || 'NO-CODE' }}</span>
                         <h3 class="text-lg font-extrabold text-neutral-950 dark:text-neutral-50 mt-1 leading-snug">{{ sub.name }}</h3>
+                        <span v-if="sub.program" class="inline-block mt-2 text-xs font-semibold px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">{{ sub.program.name }}</span>
                     </div>
 
                     <div class="mt-6 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex justify-end gap-3 text-xs">
@@ -130,6 +161,17 @@ function deleteSubject(id: number) {
                     <p class="text-xs text-neutral-450">Define name and curriculum code for the course.</p>
                 </div>
                 <form @submit.prevent="submitAdd" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Program</label>
+                        <select
+                            v-model="addForm.program_id"
+                            class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none"
+                        >
+                            <option value="">None</option>
+                            <option v-for="prog in programs" :key="prog.id" :value="String(prog.id)">{{ prog.name }}</option>
+                        </select>
+                        <span v-if="addForm.errors.program_id" class="text-xs text-red-500 block mt-1">{{ addForm.errors.program_id }}</span>
+                    </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Subject Name *</label>
                         <input
@@ -167,6 +209,17 @@ function deleteSubject(id: number) {
                     <p class="text-xs text-neutral-450">Modify course descriptions or reference code.</p>
                 </div>
                 <form @submit.prevent="submitEdit" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">Program</label>
+                        <select
+                            v-model="editForm.program_id"
+                            class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none"
+                        >
+                            <option value="">None</option>
+                            <option v-for="prog in programs" :key="prog.id" :value="String(prog.id)">{{ prog.name }}</option>
+                        </select>
+                        <span v-if="editForm.errors.program_id" class="text-xs text-red-500 block mt-1">{{ editForm.errors.program_id }}</span>
+                    </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Subject Name *</label>
                         <input

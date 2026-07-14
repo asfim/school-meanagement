@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('status')->default('unpaid'); // unpaid, partial, paid
             $table->text('remarks')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['student_id', 'fee_month']);
         });
     }

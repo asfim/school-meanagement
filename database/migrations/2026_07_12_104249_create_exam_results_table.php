@@ -24,7 +24,7 @@ return new class extends Migration
             $table->integer('merit_position')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['student_id', 'exam_name']);
         });
     }

@@ -28,14 +28,14 @@ class BannerController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title'         => ['required', 'string', 'max:255'],
-            'subtitle'      => ['nullable', 'string', 'max:255'],
-            'paragraph'     => ['nullable', 'string'],
-            'bg_color'      => ['required', 'in:forest,ink,brass'],
+            'title' => ['required', 'string', 'max:255'],
+            'subtitle' => ['nullable', 'string', 'max:255'],
+            'paragraph' => ['nullable', 'string'],
+            'bg_color' => ['required', 'in:forest,ink,brass'],
             'overlay_color' => ['required', 'in:none,dark,dark-heavy,forest,ink,brass'],
-            'sort_order'    => ['required', 'integer', 'min:0'],
-            'is_active'     => ['boolean'],
-            'image'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'sort_order' => ['required', 'integer', 'min:0'],
+            'is_active' => ['boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
         ]);
 
         if ($request->hasFile('image')) {
@@ -59,15 +59,15 @@ class BannerController extends Controller
     public function update(Request $request, Banner $banner): RedirectResponse
     {
         $validated = $request->validate([
-            'title'         => ['required', 'string', 'max:255'],
-            'subtitle'      => ['nullable', 'string', 'max:255'],
-            'paragraph'     => ['nullable', 'string'],
-            'bg_color'      => ['required', 'in:forest,ink,brass'],
+            'title' => ['required', 'string', 'max:255'],
+            'subtitle' => ['nullable', 'string', 'max:255'],
+            'paragraph' => ['nullable', 'string'],
+            'bg_color' => ['required', 'in:forest,ink,brass'],
             'overlay_color' => ['required', 'in:none,dark,dark-heavy,forest,ink,brass'],
-            'sort_order'    => ['required', 'integer', 'min:0'],
-            'is_active'     => ['boolean'],
-            'image'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
-            'remove_image'  => ['boolean'],
+            'sort_order' => ['required', 'integer', 'min:0'],
+            'is_active' => ['boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'remove_image' => ['boolean'],
         ]);
 
         if (! empty($validated['remove_image']) && $banner->image_path) {

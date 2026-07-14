@@ -1,10 +1,9 @@
 <?php
 
-use App\Models\Student;
-use App\Models\Teacher;
-use App\Models\Notice;
 use App\Models\FeePayment;
-use App\Models\ExamResult;
+use App\Models\Notice;
+use App\Models\Student;
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -51,7 +50,7 @@ test('admin can register a student and generate a unique student ID', function (
     ]);
 
     $student = Student::where('full_name_en', 'Jane Doe')->first();
-    expect($student->student_id)->toStartWith('STU-' . date('Y') . '-');
+    expect($student->student_id)->toStartWith('STU-'.date('Y').'-');
 });
 
 test('admin can register a teacher and generate a unique teacher ID', function () {
@@ -103,8 +102,8 @@ test('admin can enter marks and calculate GPA & Grade', function () {
                     'Social Science' => 55, // GP: 3.0
                 ],
                 'remarks' => 'Good job',
-            ]
-        ]
+            ],
+        ],
     ]);
 
     $response->assertRedirect();
@@ -171,7 +170,7 @@ test('admin can manage subjects dynamically', function () {
         'code' => 'PHY102',
     ]);
 
-    $subject = \App\Models\Subject::where('name', 'Physics II')->first();
+    $subject = Subject::where('name', 'Physics II')->first();
 
     // 2. Edit Subject
     $this->actingAs($admin)->put("/subjects/{$subject->id}", [
@@ -190,4 +189,3 @@ test('admin can manage subjects dynamically', function () {
         'id' => $subject->id,
     ]);
 });
-

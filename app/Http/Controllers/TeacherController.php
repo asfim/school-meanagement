@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\TeacherAttendance;
 use Illuminate\Http\RedirectResponse;
@@ -23,8 +24,8 @@ class TeacherController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhere('teacher_id', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('teacher_id', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -41,9 +42,11 @@ class TeacherController extends Controller
      */
     public function create(): Response
     {
+        $programs = \App\Models\Program::with('subjects')->orderBy('name')->get();
+
         return Inertia::render('teachers/CreateEdit', [
             'teacher' => null,
-            'subjectsList' => \App\Models\Subject::orderBy('name')->pluck('name')->toArray(),
+            'programs' => $programs,
         ]);
     }
 
@@ -77,7 +80,7 @@ class TeacherController extends Controller
             $parts = explode('-', $lastTeacher->teacher_id);
             $nextNum = (int) end($parts) + 1;
         }
-        $validated['teacher_id'] = 'TCH-' . $year . '-' . sprintf('%04d', $nextNum);
+        $validated['teacher_id'] = 'TCH-'.$year.'-'.sprintf('%04d', $nextNum);
 
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('teachers', 'public');
@@ -96,7 +99,7 @@ class TeacherController extends Controller
     {
         return Inertia::render('teachers/CreateEdit', [
             'teacher' => $teacher,
-            'subjectsList' => \App\Models\Subject::orderBy('name')->pluck('name')->toArray(),
+            'subjectsList' => Subject::orderBy('name')->pluck('name')->toArray(),
         ]);
     }
 
@@ -109,7 +112,7 @@ class TeacherController extends Controller
             'full_name' => 'required|string|max:255',
             'dob' => 'required|date',
             'mobile' => 'required|string|max:20',
-            'email' => 'required|email|unique:teachers,email,' . $teacher->id,
+            'email' => 'required|email|unique:teachers,email,'.$teacher->id,
             'qualifications' => 'required|string',
             'subjects' => 'required|array',
             'classes' => 'required|array',
@@ -141,12 +144,13 @@ class TeacherController extends Controller
     public function attendance(Request $request): Response
     {
         $date = $request->input('date', date('Y-m-d'));
-        
+
         $teachers = Teacher::orderBy('full_name')->get();
         $attendances = TeacherAttendance::where('date', $date)->get()->keyBy('teacher_id');
 
         $teachersWithAttendance = $teachers->map(function ($teacher) use ($attendances) {
             $att = $attendances->get($teacher->id);
+
             return [
                 'id' => $teacher->id,
                 'teacher_id' => $teacher->teacher_id,
