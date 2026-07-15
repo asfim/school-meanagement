@@ -108,13 +108,6 @@ function issueTc() {
                     <Link href="/students" class="px-4 py-2 border border-neutral-300 dark:border-neutral-700 bg-white hover:bg-neutral-50 rounded-lg text-sm font-semibold text-neutral-700 dark:bg-neutral-900 dark:text-neutral-200">
                         &larr; Back
                     </Link>
-                    <button
-                        v-if="student.status === 'active'"
-                        @click="issueTc"
-                        class="px-4 py-2 bg-amber-500 text-white hover:bg-amber-600 text-sm font-semibold rounded-lg shadow"
-                    >
-                        Issue Transfer Certificate
-                    </button>
                     <button @click="printPage" class="px-4 py-2 bg-neutral-950 dark:bg-neutral-50 dark:text-neutral-950 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg shadow">
                         Print Profile
                     </button>
