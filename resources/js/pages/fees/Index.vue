@@ -128,6 +128,11 @@ const netPayableAmount = computed(() => {
     return net > 0 ? net : 0;
 });
 
+// Discount is only available on the first collection (status === 'unpaid')
+const isFirstPayment = computed(() => {
+    return activeRow.value?.status === 'unpaid';
+});
+
 watch(netPayableAmount, (newVal) => {
     collectForm.amount_paid = Number(newVal.toFixed(2));
 });
@@ -334,33 +339,35 @@ function submitCollection() {
                             class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-500 font-mono font-bold"
                         />
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Discount Type *</label>
-                        <select v-model="collectForm.discount_type" class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none">
-                            <option value="none">None</option>
-                            <option value="percentage">Percentage (%)</option>
-                            <option value="fixed">Fixed Amount ($)</option>
-                        </select>
-                    </div>
-                    <div v-if="collectForm.discount_type !== 'none'">
-                        <label class="block text-xs font-semibold mb-1">Apply Scholarship / Discount *</label>
-                        <input
-                            v-model.number="collectForm.discount_value"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 font-bold"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1">Net Payable Amount ($)</label>
-                        <input
-                            :value="safeToFixed(netPayableAmount)"
-                            type="text"
-                            disabled
-                            class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-500 font-mono font-bold"
-                        />
-                    </div>
+                    <template v-if="isFirstPayment">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Discount Type *</label>
+                            <select v-model="collectForm.discount_type" class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none">
+                                <option value="none">None</option>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount ($)</option>
+                            </select>
+                        </div>
+                        <div v-if="collectForm.discount_type !== 'none'">
+                            <label class="block text-xs font-semibold mb-1">Apply Scholarship / Discount *</label>
+                            <input
+                                v-model.number="collectForm.discount_value"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 font-bold"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1">Net Payable Amount ($)</label>
+                            <input
+                                :value="safeToFixed(netPayableAmount)"
+                                type="text"
+                                disabled
+                                class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-500 font-mono font-bold"
+                            />
+                        </div>
+                    </template>
                     <div>
                         <label class="block text-xs font-semibold mb-1">Amount to Pay ($) *</label>
                         <input
