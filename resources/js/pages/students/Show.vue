@@ -35,6 +35,7 @@ const themeColor = ref('#4f46e5');
 const headerTextColor = ref('#ffffff');
 const cardBgColor = ref('#ffffff');
 const bodyTextColor = ref('#1f2937');
+const bloodGroupColor = ref('#dc2626');
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -121,7 +122,7 @@ function issueTc() {
             </div>
 
             <!-- Profile Content Area: hidden when printing specifically ID Card or TC -->
-            <div 
+            <div
                 class="grid grid-cols-1 lg:grid-cols-3 gap-6"
                 :class="{ 'print:hidden': printMode === 'id-card' || printMode === 'tc', 'print:block': printMode === 'all' }"
             >
@@ -135,7 +136,7 @@ function issueTc() {
                     </div>
                     <h2 class="mt-4 text-xl font-bold text-neutral-900 dark:text-neutral-50">{{ student.full_name_en }}</h2>
                     <p class="text-sm font-semibold text-neutral-500">{{ student.student_id }}</p>
-                    
+
                     <div class="mt-4 flex items-center gap-1.5">
                         <span v-if="student.status === 'active'" class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 border border-green-200 dark:border-green-800">Active Student</span>
                         <span v-else-if="student.status === 'transferred'" class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800">Transferred (TC Issued)</span>
@@ -184,15 +185,15 @@ function issueTc() {
             </div>
 
             <!-- Interactive printable section -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-1">
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-6 print:grid-cols-1">
                 <!-- 1. Student ID Card Generator -->
-                <div 
+                <div
                     class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm print:shadow-none print:border-none print:flex print:justify-center"
                     :class="{ 'print:hidden': printMode === 'tc', 'print:block': printMode === 'id-card' || printMode === 'all' }"
                 >
                     <div class="flex items-center justify-between mb-4 print:hidden">
                         <h3 class="text-lg font-bold">Student ID Card (Front &amp; Back)</h3>
-                        <button 
+                        <button
                             @click="printIdCard"
                             class="px-3 py-1 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold rounded shadow-sm"
                         >
@@ -203,7 +204,7 @@ function issueTc() {
                     <!-- Design Controls Toolbar -->
                     <div class="mb-6 p-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-3 print:hidden">
                         <div class="text-xs font-bold uppercase text-neutral-400 tracking-wider">Customize Card Design</div>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                             <div>
                                 <label class="block text-[10px] font-semibold text-neutral-500 mb-1">Theme / Border</label>
                                 <div class="flex items-center gap-1.5">
@@ -230,6 +231,13 @@ function issueTc() {
                                 <div class="flex items-center gap-1.5">
                                     <input type="color" v-model="bodyTextColor" class="h-8 w-8 rounded cursor-pointer border border-neutral-300 bg-transparent" />
                                     <span class="text-xs font-mono">{{ bodyTextColor }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-neutral-500 mb-1">Blood Group Color</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="color" v-model="bloodGroupColor" class="h-8 w-8 rounded cursor-pointer border border-neutral-300 bg-transparent" />
+                                    <span class="text-xs font-mono">{{ bloodGroupColor }}</span>
                                 </div>
                             </div>
                         </div>
@@ -281,7 +289,7 @@ function issueTc() {
                             <!-- Card Body -->
                             <div class="px-3 py-2 flex-1 flex flex-col justify-center space-y-1 text-[10px]" :style="{ color: bodyTextColor }">
                                 <div class="flex items-center justify-between">
-                                    <div>Blood Group: <span class="font-extrabold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800 ml-1">{{ student.blood_group || 'N/A' }}</span></div>
+                                    <div>Blood Group: <span class="font-extrabold px-1.5 py-0.5 rounded border ml-1" :style="{ color: bloodGroupColor + ' !important', borderColor: bloodGroupColor + ' !important', backgroundColor: bloodGroupColor + '15 !important' }">{{ student.blood_group || 'N/A' }}</span></div>
                                     <div>Phone: <span class="font-semibold font-mono" :style="{ color: bodyTextColor }">{{ student.parent_mobile }}</span></div>
                                 </div>
                                 <div class="border-t my-1" :style="{ borderTopColor: themeColor }"></div>
@@ -303,14 +311,14 @@ function issueTc() {
                 </div>
 
                 <!-- 2. Transfer Certificate Layout (Visible if transferred) -->
-                <div 
-                    v-if="student.status === 'transferred'" 
+                <div
+                    v-if="student.status === 'transferred'"
                     class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm print:shadow-none print:border-none print:p-0 col-span-1 md:col-span-2 print:col-span-1"
                     :class="{ 'print:hidden': printMode === 'id-card', 'print:block': printMode === 'tc' || printMode === 'all' }"
                 >
                     <div class="flex items-center justify-between mb-4 print:hidden">
                         <h3 class="text-lg font-bold">Transfer Certificate (TC)</h3>
-                        <button 
+                        <button
                             @click="printTc"
                             class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded shadow-sm"
                         >
@@ -325,19 +333,19 @@ function issueTc() {
                         </div>
                         <div class="text-sm leading-loose text-justify space-y-4">
                             <p>
-                                This is to certify that <span class="font-bold underline">{{ student.full_name_en }}</span>, 
-                                son/daughter of <span class="font-bold underline">{{ student.parent_name }}</span>, 
+                                This is to certify that <span class="font-bold underline">{{ student.full_name_en }}</span>,
+                                son/daughter of <span class="font-bold underline">{{ student.parent_name }}</span>,
                                 was admitted to this institution on <span class="underline">{{ new Date(student.admission_date).toLocaleDateString() }}</span>.
                             </p>
                             <p>
-                                He/She was studying in <span class="font-bold underline">{{ student.program_name }}</span>, Section <span class="font-bold underline">{{ student.section }}</span> 
-                                under Roll Number <span class="font-bold underline">{{ student.roll_number }}</span>. 
-                                According to the school registry database, his/her date of birth recorded at admission is 
+                                He/She was studying in <span class="font-bold underline">{{ student.program_name }}</span>, Section <span class="font-bold underline">{{ student.section }}</span>
+                                under Roll Number <span class="font-bold underline">{{ student.roll_number }}</span>.
+                                According to the school registry database, his/her date of birth recorded at admission is
                                 <span class="font-bold underline">{{ new Date(student.dob).toLocaleDateString() }}</span>.
                             </p>
                             <p>
-                                The student is leaving the school having cleared all outstanding school tuition fee installments. 
-                                His/Her character and conduct during the academic residency here have been found to be exemplary. 
+                                The student is leaving the school having cleared all outstanding school tuition fee installments.
+                                His/Her character and conduct during the academic residency here have been found to be exemplary.
                                 We wish him/her the very best in all future academic pursuits.
                             </p>
                         </div>
