@@ -11,13 +11,23 @@ interface StudentMarksRow {
     remarks: string;
 }
 
+import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
+
 const props = defineProps<{
     marksSheet: StudentMarksRow[];
     subjects: string[];
     program_name: string;
     section: string;
     exam_name: string;
+    programs: string[];
+    sections: string[];
+    examNames: string[];
 }>();
+
+const selectedProgram = ref(props.program_name);
+const selectedSection = ref(props.section);
+const selectedExam = ref(props.exam_name);
 
 const form = useForm({
     program_name: props.program_name,
@@ -29,6 +39,14 @@ const form = useForm({
         remarks: row.remarks || '',
     })),
 });
+
+function loadMarksSheet() {
+    router.get('/results/marks-entry', {
+        program_name: selectedProgram.value,
+        section: selectedSection.value,
+        exam_name: selectedExam.value,
+    });
+}
 
 function submit() {
     form.post('/results/marks-entry', {
@@ -56,6 +74,37 @@ const breadcrumbs = [
                     <p class="text-sm text-neutral-500">Record scores for {{ props.program_name }} (Sec {{ section }}) &mdash; {{ exam_name }}</p>
                 </div>
                 <Link :href="'/results?program_name=' + props.program_name + '&section=' + section + '&exam_name=' + exam_name" class="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:underline">&larr; Back</Link>
+            </div>
+
+            <!-- Filter Toolbar -->
+            <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-end gap-4 animate-in fade-in duration-200">
+                <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Program *</label>
+                        <select v-model="selectedProgram" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                            <option v-for="p in programs" :key="p" :value="p">{{ p }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Section *</label>
+                        <select v-model="selectedSection" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                            <option v-for="s in sections" :key="s" :value="s">Section {{ s }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Exam *</label>
+                        <select v-model="selectedExam" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                            <option v-for="e in examNames" :key="e" :value="e">{{ e }}</option>
+                        </select>
+                    </div>
+                </div>
+                <button
+                    @click="loadMarksSheet"
+                    class="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow whitespace-nowrap"
+                    style="background-color: #4f46e5 !important;"
+                >
+                    Load Marks Sheet
+                </button>
             </div>
 
             <!-- Entry Form Sheet -->
@@ -105,7 +154,7 @@ const breadcrumbs = [
                 </div>
 
                 <div class="border-t border-neutral-100 dark:border-neutral-800 pt-4 flex justify-end gap-3">
-                    <Link :href="'/results?class=' + props.class + '&section=' + section + '&exam_name=' + exam_name" class="px-4 py-2 border border-neutral-300 dark:border-neutral-700 text-sm font-semibold rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800">Cancel</Link>
+                    <Link :href="'/results?program_name=' + props.program_name + '&section=' + section + '&exam_name=' + exam_name" class="px-4 py-2 border border-neutral-300 dark:border-neutral-700 text-sm font-semibold rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800">Cancel</Link>
                     <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-neutral-950 dark:bg-neutral-50 dark:text-neutral-950 hover:bg-neutral-800 text-sm font-semibold rounded-lg text-white shadow">
                         Save Marks Sheet
                     </button>

@@ -122,6 +122,9 @@ class ResultController extends Controller
             'program_name' => $programName,
             'section' => $section,
             'exam_name' => $examName,
+            'programs' => Program::orderBy('name')->pluck('name')->toArray(),
+            'sections' => ['A', 'B', 'C'],
+            'examNames' => ['First Term Exam', 'Midterm Exam', 'Annual Exam'],
         ]);
     }
 

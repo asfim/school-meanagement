@@ -151,15 +151,29 @@ watch([selectedProgram, selectedSection, selectedExam, search], () => {
                                 </td>
                                 <td class="p-4 text-center font-mono font-bold">{{ row.gpa || '-' }}</td>
                                 <td class="p-4 text-center font-bold text-lg" :class="row.grade === 'F' ? 'text-red-500' : 'text-neutral-100 dark:text-neutral-250'">{{ row.grade || '-' }}</td>
-                                <td class="p-4 text-right">
-                                    <Link
-                                        v-if="row.has_result"
-                                        :href="`/results/${row.result_id}/print`"
-                                        class="px-3 py-1 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs font-bold rounded-lg text-neutral-900 dark:text-neutral-100 transition"
-                                    >
-                                        Print Marksheet
-                                    </Link>
-                                    <span v-else class="text-xs text-neutral-450 italic">unreleased</span>
+                                <td class="p-4 text-right space-x-2">
+                                    <template v-if="row.has_result">
+                                        <Link
+                                            :href="`/results/${row.result_id}/print`"
+                                            class="px-3 py-1 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs font-bold rounded-lg text-neutral-900 dark:text-neutral-100 transition"
+                                        >
+                                            Print Marksheet
+                                        </Link>
+                                        <Link
+                                            :href="'/results/marks-entry?program_name=' + selectedProgram + '&section=' + selectedSection + '&exam_name=' + selectedExam"
+                                            class="text-xs text-indigo-650 hover:underline"
+                                        >
+                                            Edit Marks
+                                        </Link>
+                                    </template>
+                                    <template v-else>
+                                        <Link
+                                            :href="'/results/marks-entry?program_name=' + selectedProgram + '&section=' + selectedSection + '&exam_name=' + selectedExam"
+                                            class="px-2.5 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 text-xs font-bold rounded-lg transition"
+                                        >
+                                            Enter Marks
+                                        </Link>
+                                    </template>
                                 </td>
                             </tr>
                             <tr v-if="reportCard.data.length === 0">
