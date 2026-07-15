@@ -23,6 +23,7 @@ const props = defineProps<{
     filters: { program_id?: string };
 }>();
 
+const filterProgramId = ref(props.filters.program_id || '');
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 const editingSubject = ref<Subject | null>(null);
@@ -76,7 +77,7 @@ function submitEdit() {
 }
 
 function filterByProgram() {
-    router.get('/subjects', { program_id: props.filters.program_id || '' }, { preserveState: true });
+    router.get('/subjects', { program_id: filterProgramId.value }, { preserveState: true });
 }
 
 function deleteSubject(id: number) {
@@ -119,7 +120,7 @@ function deleteSubject(id: number) {
             <div class="flex items-center gap-3">
                 <label class="text-xs font-semibold text-neutral-500">Filter by Program:</label>
                 <select
-                    v-model="filters.program_id"
+                    v-model="filterProgramId"
                     @change="filterByProgram"
                     class="rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none"
                 >
