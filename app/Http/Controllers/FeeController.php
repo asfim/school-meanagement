@@ -38,7 +38,8 @@ class FeeController extends Controller
             ->withQueryString();
 
         $studentIds = collect($students->items())->pluck('id');
-        $payments = FeePayment::whereIn('student_id', $studentIds)
+        $payments = FeePayment::with('transactions')
+            ->whereIn('student_id', $studentIds)
             ->where('fee_month', $month)
             ->get()
             ->keyBy('student_id');
@@ -51,6 +52,7 @@ class FeeController extends Controller
                 'student_uid' => $student->student_id,
                 'full_name' => $student->full_name_en,
                 'roll_number' => $student->roll_number,
+                'tuition_fee' => $student->tuition_fee,
                 'has_billing' => $pay !== null,
                 'payment_id' => $pay ? $pay->id : null,
                 'amount_due' => $pay ? $pay->amount_due : 0.00,
@@ -59,6 +61,7 @@ class FeeController extends Controller
                 'status' => $pay ? $pay->status : 'unbilled',
                 'receipt_number' => $pay ? $pay->receipt_number : null,
                 'payment_date' => $pay && $pay->payment_date ? $pay->payment_date->format('Y-m-d') : null,
+                'transactions' => $pay ? $pay->transactions : [],
             ];
         });
 
@@ -125,7 +128,7 @@ class FeeController extends Controller
                 FeePayment::create([
                     'student_id' => $student->id,
                     'fee_month' => $month,
-                    'amount_due' => $amount,
+                    'amount_due' => $student->tuition_fee,
                     'amount_paid' => 0.00,
                     'discount' => 0.00,
                     'status' => 'unpaid',
@@ -146,39 +149,74 @@ class FeeController extends Controller
     {
         $request->validate([
             'payment_id' => 'required|exists:fee_payments,id',
-            'amount_paid' => 'required|numeric|min:0',
-            'discount' => 'required|numeric|min:0',
+            'discount_type' => 'required|string|in:percentage,fixed,none',
+            'discount_value' => 'required|numeric|min:0',
+            'discount_amount' => 'required|numeric|min:0',
+            'amount_paid' => 'required|numeric|min:0.01',
             'payment_method' => 'required|string|in:cash,bank,mobile_banking',
             'remarks' => 'nullable|string|max:255',
         ]);
 
         $payment = FeePayment::findOrFail($request->input('payment_id'));
 
-        $newDiscount = $request->input('discount');
+        if ($payment->status === 'paid') {
+            return redirect()->back()->withErrors(['amount_paid' => 'This fee has already been fully paid.']);
+        }
+
+        $newDiscount = $request->input('discount_amount');
         $newPaid = $request->input('amount_paid');
 
-        // Calculate new totals
+        // Current due before this transaction
+        $currentDue = $payment->amount_due - $payment->amount_paid - $payment->discount;
+        $netPayable = $currentDue - $newDiscount;
+
+        if ($newPaid > $netPayable + 0.01) {
+            return redirect()->back()->withErrors(['amount_paid' => 'Amount to pay cannot exceed the Net Payable Amount of ৳'.number_format($netPayable, 2)]);
+        }
+
         $totalPaid = $payment->amount_paid + $newPaid;
         $totalDiscount = $payment->discount + $newDiscount;
 
         $status = 'unpaid';
-        if ($totalPaid >= ($payment->amount_due - $totalDiscount)) {
+        if ($totalPaid >= ($payment->amount_due - $totalDiscount - 0.01)) {
             $status = 'paid';
-        } elseif ($totalPaid > 0) {
+        } else {
             $status = 'partial';
         }
 
-        // Generate receipt number if not already present
+        // Generate receipt number
+        $year = date('Y');
         $receiptNumber = $payment->receipt_number;
         if ($receiptNumber === null) {
-            $year = date('Y');
-            $lastPayment = FeePayment::whereNotNull('receipt_number')->orderBy('id', 'desc')->first();
-            $nextNum = 10001;
-            if ($lastPayment !== null && preg_match('/REC-\d{4}-(\d+)/', $lastPayment->receipt_number, $matches)) {
-                $nextNum = (int) $matches[1] + 1;
-            }
-            $receiptNumber = "REC-{$year}-{$nextNum}";
+            $maxReceipt = FeePayment::whereNotNull('receipt_number')
+                ->where('receipt_number', 'like', "REC-{$year}-%")
+                ->get()
+                ->map(function ($p) {
+                    if (preg_match('/REC-\d{4}-(\d+)/', $p->receipt_number, $matches)) {
+                        return (int) $matches[1];
+                    }
+
+                    return 10000;
+                })
+                ->max() ?? 10000;
+
+            $receiptNumber = "REC-{$year}-".($maxReceipt + 1);
         }
+
+        // Save transaction history
+        $payment->transactions()->create([
+            'payment_date' => now(),
+            'tuition_fee' => $currentDue,
+            'discount_type' => $request->input('discount_type'),
+            'discount_value' => $request->input('discount_value'),
+            'discount_amount' => $newDiscount,
+            'net_payable_amount' => $netPayable,
+            'amount_paid' => $newPaid,
+            'remaining_due' => $netPayable - $newPaid,
+            'status_after_payment' => $status,
+            'receipt_number' => $receiptNumber,
+            'remarks' => $request->input('remarks'),
+        ]);
 
         $payment->update([
             'amount_paid' => $totalPaid,

@@ -42,6 +42,7 @@ test('admin can register a student and generate a unique student ID', function (
         'section' => 'A',
         'roll_number' => 5,
         'admission_date' => '2026-01-10',
+        'tuition_fee' => 1500.00,
         'blood_group' => 'O+',
         'emergency_contact' => '01711122234',
     ]);
@@ -147,7 +148,9 @@ test('admin can generate tuition billing and collect payments', function () {
     $this->actingAs($admin)->post('/fees/collect', [
         'payment_id' => $payment->id,
         'amount_paid' => 1200,
-        'discount' => 300,
+        'discount_type' => 'fixed',
+        'discount_value' => 300,
+        'discount_amount' => 300,
         'payment_method' => 'cash',
         'remarks' => 'Scholarship discount',
     ])->assertRedirect();
@@ -191,5 +194,75 @@ test('admin can manage subjects dynamically', function () {
     $this->actingAs($admin)->delete("/subjects/{$subject->id}")->assertRedirect();
     $this->assertDatabaseMissing('subjects', [
         'id' => $subject->id,
+    ]);
+});
+
+test('admin can record partial fee payments and view transaction history ledger', function () {
+    $admin = User::factory()->create();
+    $student = Student::factory()->create([
+        'program_name' => 'Science',
+        'tuition_fee' => 1500.00,
+        'status' => 'active',
+    ]);
+
+    // 1. Generate Billing
+    $this->actingAs($admin)->post('/fees/billing', [
+        'program_name' => 'Science',
+        'month' => '2026-07',
+        'amount' => 1500,
+    ])->assertRedirect();
+
+    $payment = FeePayment::first();
+
+    // 2. Perform partial payment 1
+    $this->actingAs($admin)->post('/fees/collect', [
+        'payment_id' => $payment->id,
+        'amount_paid' => 500,
+        'discount_type' => 'percentage',
+        'discount_value' => 10,
+        'discount_amount' => 150,
+        'payment_method' => 'cash',
+        'remarks' => 'First installment with discount',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('fee_payments', [
+        'id' => $payment->id,
+        'amount_paid' => 500,
+        'discount' => 150,
+        'status' => 'partial',
+    ]);
+
+    $this->assertDatabaseHas('fee_payment_transactions', [
+        'fee_payment_id' => $payment->id,
+        'amount_paid' => 500,
+        'discount_amount' => 150,
+        'remaining_due' => 850,
+        'status_after_payment' => 'partial',
+    ]);
+
+    // 3. Perform payment 2 to clear it
+    $this->actingAs($admin)->post('/fees/collect', [
+        'payment_id' => $payment->id,
+        'amount_paid' => 850,
+        'discount_type' => 'none',
+        'discount_value' => 0,
+        'discount_amount' => 0,
+        'payment_method' => 'bank',
+        'remarks' => 'Final payment',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('fee_payments', [
+        'id' => $payment->id,
+        'amount_paid' => 1350,
+        'discount' => 150,
+        'status' => 'paid',
+    ]);
+
+    $this->assertDatabaseHas('fee_payment_transactions', [
+        'fee_payment_id' => $payment->id,
+        'amount_paid' => 850,
+        'discount_amount' => 0,
+        'remaining_due' => 0,
+        'status_after_payment' => 'paid',
     ]);
 });

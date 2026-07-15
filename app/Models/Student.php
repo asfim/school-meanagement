@@ -25,6 +25,7 @@ class Student extends Model
         'parent_mobile',
         'permanent_address',
         'current_address',
+        'tuition_fee',
         'program_name',
         'signature_path',
         'section',
@@ -46,6 +47,7 @@ class Student extends Model
         return [
             'dob' => 'date',
             'admission_date' => 'date',
+            'tuition_fee' => 'decimal:2',
         ];
     }
 

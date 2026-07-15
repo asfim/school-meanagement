@@ -51,6 +51,7 @@ const form = useForm({
     parent_mobile: props.student?.parent_mobile || '',
     permanent_address: props.student?.permanent_address || '',
     current_address: props.student?.current_address || '',
+    tuition_fee: props.student?.tuition_fee || 1500.00,
     program_name: props.student?.program_name || '',
     section: props.student?.section || 'A',
     roll_number: props.student?.roll_number || 1,
@@ -126,7 +127,7 @@ const breadcrumbs = [
                 <!-- Section 1: Academic Information -->
                 <div>
                     <h2 class="text-lg font-bold border-b border-neutral-100 dark:border-neutral-800 pb-2 text-neutral-900 dark:text-neutral-100">Academic details</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Program *</label>
                             <select v-model="form.program_name" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
@@ -146,6 +147,11 @@ const breadcrumbs = [
                             <label class="block text-sm font-medium mb-1">Roll Number *</label>
                             <input v-model="form.roll_number" type="number" min="1" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none" />
                             <span v-if="form.errors.roll_number" class="text-xs text-red-500">{{ form.errors.roll_number }}</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tuition Fee ($) *</label>
+                            <input v-model="form.tuition_fee" type="number" min="0" step="0.01" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none" />
+                            <span v-if="form.errors.tuition_fee" class="text-xs text-red-500">{{ form.errors.tuition_fee }}</span>
                         </div>
                     </div>
                 </div>
