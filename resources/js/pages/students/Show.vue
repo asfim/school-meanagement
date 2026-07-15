@@ -31,6 +31,11 @@ const props = defineProps<{
 
 const printMode = ref<'all' | 'id-card' | 'tc'>('all');
 
+const themeColor = ref('#4f46e5');
+const headerTextColor = ref('#ffffff');
+const cardBgColor = ref('#ffffff');
+const bodyTextColor = ref('#1f2937');
+
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Students', href: '/students' },
@@ -186,7 +191,7 @@ function issueTc() {
                     :class="{ 'print:hidden': printMode === 'tc', 'print:block': printMode === 'id-card' || printMode === 'all' }"
                 >
                     <div class="flex items-center justify-between mb-4 print:hidden">
-                        <h3 class="text-lg font-bold">Student ID Card</h3>
+                        <h3 class="text-lg font-bold">Student ID Card (Front &amp; Back)</h3>
                         <button 
                             @click="printIdCard"
                             class="px-3 py-1 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold rounded shadow-sm"
@@ -194,31 +199,66 @@ function issueTc() {
                             Print ID Card
                         </button>
                     </div>
-                    <div class="flex justify-center print:m-0">
-                        <!-- Card shell -->
-                        <div class="w-80 h-48 border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 rounded-xl p-4 flex flex-col justify-between shadow relative overflow-hidden font-sans border-t-8 border-t-neutral-950 dark:border-t-neutral-50 print:border-t-neutral-950 print:border print:shadow-none">
-                            <!-- School Branding -->
-                            <div class="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-2">
-                                <div class="text-xs font-black uppercase text-neutral-900 dark:text-neutral-100 tracking-wider">Antigravity School</div>
-                                <div class="text-[8px] text-neutral-500 uppercase">Student Card</div>
+
+                    <!-- Design Controls Toolbar -->
+                    <div class="mb-6 p-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-3 print:hidden">
+                        <div class="text-xs font-bold uppercase text-neutral-400 tracking-wider">Customize Card Design</div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-neutral-500 mb-1">Theme / Border</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="color" v-model="themeColor" class="h-8 w-8 rounded cursor-pointer border border-neutral-300 bg-transparent" />
+                                    <span class="text-xs font-mono">{{ themeColor }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-neutral-500 mb-1">Header Text</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="color" v-model="headerTextColor" class="h-8 w-8 rounded cursor-pointer border border-neutral-300 bg-transparent" />
+                                    <span class="text-xs font-mono">{{ headerTextColor }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-neutral-500 mb-1">Card Background</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="color" v-model="cardBgColor" class="h-8 w-8 rounded cursor-pointer border border-neutral-300 bg-transparent" />
+                                    <span class="text-xs font-mono">{{ cardBgColor }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-neutral-500 mb-1">Body Text Color</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="color" v-model="bodyTextColor" class="h-8 w-8 rounded cursor-pointer border border-neutral-300 bg-transparent" />
+                                    <span class="text-xs font-mono">{{ bodyTextColor }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-6 items-center print:flex-col print:gap-6 print:m-0">
+                        <!-- FRONT SIDE -->
+                        <div class="w-80 h-48 rounded-xl flex flex-col justify-between shadow relative overflow-hidden font-sans bg-white" :style="{ border: '2px solid ' + themeColor + ' !important', backgroundColor: cardBgColor + ' !important', color: bodyTextColor + ' !important', '-webkit-print-color-adjust': 'exact', 'print-color-adjust': 'exact' }">
+                            <!-- Header Banner -->
+                            <div class="h-10 flex items-center justify-between px-3" :style="{ backgroundColor: themeColor + ' !important', color: headerTextColor + ' !important', '-webkit-print-color-adjust': 'exact', 'print-color-adjust': 'exact' }">
+                                <span class="text-[11px] font-black uppercase tracking-wider" :style="{ color: headerTextColor + ' !important' }">Antigravity School</span>
+                                <span class="text-[7px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider" :style="{ backgroundColor: 'rgba(255,255,255,0.2) !important', color: headerTextColor + ' !important' }">Student ID</span>
                             </div>
                             <!-- Card Body -->
-                            <div class="flex gap-4 items-center my-auto">
-                                <div class="h-20 w-16 bg-neutral-200 dark:bg-neutral-800 rounded overflow-hidden flex items-center justify-center border border-neutral-300">
+                            <div class="flex gap-3 items-center px-3 py-2 my-auto">
+                                <div class="h-20 w-16 bg-neutral-100 dark:bg-neutral-850 rounded overflow-hidden flex items-center justify-center shrink-0" style="border: 1px solid #d1d5db !important;">
                                     <img v-if="student.photo_path" :src="`/storage/${student.photo_path}`" class="h-full w-full object-cover" />
                                     <svg v-else class="h-10 w-10 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                 </div>
-                                <div class="text-xs space-y-1">
-                                    <div class="font-extrabold text-sm text-neutral-900 dark:text-neutral-100">{{ student.full_name_en }}</div>
-                                    <div>ID: <span class="font-bold text-neutral-900 dark:text-neutral-100 font-mono">{{ student.student_id }}</span></div>
-                                    <div>Program: <span class="font-semibold">{{ student.program_name }} (Sec {{ student.section }})</span></div>
-                                    <div>Roll: <span class="font-semibold">{{ student.roll_number }}</span></div>
-                                    <div>Emergency: <span class="font-mono text-[10px]">{{ student.emergency_contact }}</span></div>
+                                <div class="text-[11px] space-y-0.5" :style="{ color: bodyTextColor }">
+                                    <div class="font-extrabold text-sm leading-tight" :style="{ color: themeColor + ' !important' }">{{ student.full_name_en }}</div>
+                                    <div>ID: <span class="font-bold font-mono" :style="{ color: bodyTextColor }">{{ student.student_id }}</span></div>
+                                    <div>Program: <span class="font-semibold" :style="{ color: bodyTextColor }">{{ student.program_name }} ({{ student.section }})</span></div>
+                                    <div>Roll: <span class="font-bold" :style="{ color: bodyTextColor }">{{ student.roll_number }}</span></div>
                                 </div>
                             </div>
                             <!-- Footer logo/bar -->
-                            <div class="flex items-end justify-between border-t border-neutral-200 dark:border-neutral-800 pt-1.5">
-                                <div class="text-[8px] text-neutral-400 uppercase tracking-widest my-auto">
+                            <div class="flex items-end justify-between border-t px-3 pb-2 pt-1" :style="{ borderTopColor: themeColor }">
+                                <div class="text-[8px] font-bold uppercase tracking-wider my-auto text-neutral-400">
                                     Issued: {{ new Date(student.admission_date).getFullYear() }}
                                 </div>
                                 <div class="flex flex-col items-center">
@@ -226,8 +266,37 @@ function issueTc() {
                                         <img :src="`/storage/${student.signature_path}`" class="max-h-full max-w-full object-contain" />
                                     </div>
                                     <div v-else class="h-6 w-20 border-b border-dashed border-neutral-400"></div>
-                                    <div class="text-[6px] text-neutral-400 uppercase tracking-wider mt-0.5">Authority</div>
+                                    <div class="text-[6px] font-semibold uppercase tracking-wider mt-0.5 text-neutral-500">Authority</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- BACK SIDE -->
+                        <div class="w-80 h-48 rounded-xl flex flex-col justify-between shadow relative overflow-hidden font-sans bg-white" :style="{ border: '2px solid ' + themeColor + ' !important', backgroundColor: cardBgColor + ' !important', color: bodyTextColor + ' !important', '-webkit-print-color-adjust': 'exact', 'print-color-adjust': 'exact' }">
+                            <!-- Header Banner -->
+                            <div class="h-10 flex items-center justify-between px-3" :style="{ backgroundColor: themeColor + ' !important', color: headerTextColor + ' !important', '-webkit-print-color-adjust': 'exact', 'print-color-adjust': 'exact' }">
+                                <span class="text-[11px] font-black uppercase tracking-wider" :style="{ color: headerTextColor + ' !important' }">Card Details</span>
+                                <span class="text-[7px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider" :style="{ backgroundColor: 'rgba(255,255,255,0.2) !important', color: headerTextColor + ' !important' }">Back Side</span>
+                            </div>
+                            <!-- Card Body -->
+                            <div class="px-3 py-2 flex-1 flex flex-col justify-center space-y-1 text-[10px]" :style="{ color: bodyTextColor }">
+                                <div class="flex items-center justify-between">
+                                    <div>Blood Group: <span class="font-extrabold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800 ml-1">{{ student.blood_group || 'N/A' }}</span></div>
+                                    <div>Phone: <span class="font-semibold font-mono" :style="{ color: bodyTextColor }">{{ student.parent_mobile }}</span></div>
+                                </div>
+                                <div class="border-t my-1" :style="{ borderTopColor: themeColor }"></div>
+                                <div>
+                                    <span class="font-bold text-neutral-500 block">Emergency Contact:</span>
+                                    <span class="font-mono font-semibold" :style="{ color: bodyTextColor }">{{ student.emergency_contact }}</span>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-neutral-500 block">Current Address:</span>
+                                    <span class="leading-tight truncate block" :style="{ color: bodyTextColor }">{{ student.current_address }}</span>
+                                </div>
+                            </div>
+                            <!-- Footer logo/bar -->
+                            <div class="border-t px-3 py-1.5 text-[7px] text-center leading-tight uppercase font-bold text-neutral-500 animate-in" :style="{ backgroundColor: 'rgba(0,0,0,0.02) !important', borderTopColor: themeColor, '-webkit-print-color-adjust': 'exact', 'print-color-adjust': 'exact' }">
+                                If found, please return to Antigravity School, Academic Office.
                             </div>
                         </div>
                     </div>
