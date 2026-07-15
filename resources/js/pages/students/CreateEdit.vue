@@ -198,7 +198,7 @@ const breadcrumbs = [
                     <div>
                         <label class="block text-sm font-medium mb-1">Student Photo</label>
                         <div class="mt-2 flex items-center gap-4">
-                            <div class="h-20 w-20 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center">
+                            <div class="h-24 w-24 shrink-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center">
                                 <img v-if="photoPreview" :src="photoPreview" class="h-full w-full object-cover" />
                                 <img v-else-if="props.student?.photo_path" :src="`/storage/${props.student.photo_path}`" class="h-full w-full object-cover" />
                                 <span v-else class="text-xs text-neutral-400">No Photo</span>
@@ -211,7 +211,7 @@ const breadcrumbs = [
                     <div>
                         <label class="block text-sm font-medium mb-1">Authorization Signature</label>
                         <div class="mt-2 flex items-center gap-4">
-                            <div class="h-20 w-32 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center">
+                            <div class="h-24 w-40 shrink-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center">
                                 <img v-if="signaturePreview" :src="signaturePreview" class="h-full w-full object-contain" />
                                 <img v-else-if="props.student?.signature_path" :src="`/storage/${props.student.signature_path}`" class="h-full w-full object-contain" />
                                 <span v-else class="text-xs text-neutral-400">No Signature</span>
