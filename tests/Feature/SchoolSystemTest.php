@@ -2,6 +2,7 @@
 
 use App\Models\FeePayment;
 use App\Models\Notice;
+use App\Models\Program;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\User;
@@ -23,6 +24,9 @@ test('public homepage displays active notices', function () {
 });
 
 test('admin can register a student and generate a unique student ID', function () {
+    // Ensure programs exist first
+    Program::factory()->create(['name' => 'Science']);
+
     $admin = User::factory()->create();
 
     $response = $this->actingAs($admin)->post('/students', [
@@ -34,7 +38,7 @@ test('admin can register a student and generate a unique student ID', function (
         'parent_mobile' => '01711122233',
         'permanent_address' => 'Permanent Addr',
         'current_address' => 'Current Addr',
-        'class' => 'Class 6',
+        'program_name' => 'Science',
         'section' => 'A',
         'roll_number' => 5,
         'admission_date' => '2026-01-10',
@@ -45,7 +49,7 @@ test('admin can register a student and generate a unique student ID', function (
     $response->assertRedirect('/students');
     $this->assertDatabaseHas('students', [
         'full_name_en' => 'Jane Doe',
-        'class' => 'Class 6',
+        'program_name' => 'Science',
         'roll_number' => 5,
     ]);
 
@@ -84,12 +88,12 @@ test('admin can register a teacher and generate a unique teacher ID', function (
 test('admin can enter marks and calculate GPA & Grade', function () {
     $admin = User::factory()->create();
     $student = Student::factory()->create([
-        'class' => 'Class 8',
+        'program_name' => 'Science',
         'section' => 'A',
     ]);
 
     $response = $this->actingAs($admin)->post('/results/marks-entry', [
-        'class' => 'Class 8',
+        'program_name' => 'Science',
         'section' => 'A',
         'exam_name' => 'First Term Exam',
         'results' => [
@@ -119,13 +123,13 @@ test('admin can enter marks and calculate GPA & Grade', function () {
 test('admin can generate tuition billing and collect payments', function () {
     $admin = User::factory()->create();
     $student = Student::factory()->create([
-        'class' => 'Class 6',
+        'program_name' => 'Science',
         'status' => 'active',
     ]);
 
     // 1. Generate Billing
     $this->actingAs($admin)->post('/fees/billing', [
-        'class' => 'Class 6',
+        'program_name' => 'Science',
         'month' => '2026-07',
         'amount' => 1500,
     ])->assertRedirect();

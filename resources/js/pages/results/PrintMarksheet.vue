@@ -6,7 +6,7 @@ interface Student {
     student_id: string;
     full_name_en: string;
     full_name_native: string;
-    class: string;
+    program_name: string;
     section: string;
     roll_number: number;
 }
@@ -14,7 +14,7 @@ interface Student {
 interface ExamResult {
     id: number;
     exam_name: string;
-    class: string;
+    program_name: string;
     section: string;
     marks: Record<string, number>;
     gpa: string;
@@ -60,7 +60,7 @@ function getSubjectGrade(score: number): string {
         <!-- Control buttons (hidden on print) -->
         <div class="mb-6 w-full max-w-2xl flex justify-between items-center print:hidden">
             <Link
-                :href="'/results?class=' + result.class + '&section=' + result.section + '&exam_name=' + result.exam_name"
+                :href="'/results?program_name=' + result.program_name + '&section=' + result.section + '&exam_name=' + result.exam_name"
                 class="px-4 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-neutral-50 rounded-lg text-sm font-semibold text-neutral-700 dark:text-neutral-300"
             >
                 &larr; Back to Results
@@ -86,7 +86,7 @@ function getSubjectGrade(score: number): string {
                 <div>
                     <div><span class="text-neutral-500">Student Name:</span> <span class="font-bold">{{ result.student.full_name_en }}</span></div>
                     <div><span class="text-neutral-500">Student ID:</span> <span class="font-bold font-mono">{{ result.student.student_id }}</span></div>
-                    <div><span class="text-neutral-500">Class & Section:</span> <span class="font-bold">{{ result.class }} (Sec {{ result.section }})</span></div>
+                    <div><span class="text-neutral-500">Program & Section:</span> <span class="font-bold">{{ result.program_name }} (Sec {{ result.section }})</span></div>
                 </div>
                 <div class="text-right">
                     <div><span class="text-neutral-500">Exam:</span> <span class="font-bold">{{ result.exam_name }}</span></div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Program;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,23 +28,27 @@ class StudentController extends Controller
             });
         }
 
-        if ($request->filled('class')) {
-            $query->where('class', $request->input('class'));
+        if ($request->filled('program_name')) {
+            $query->where('program_name', $request->input('program_name'));
         }
 
         if ($request->filled('section')) {
             $query->where('section', $request->input('section'));
         }
 
-        $students = $query->orderBy('class')
+        $students = $query->orderBy('program_name')
             ->orderBy('section')
             ->orderBy('roll_number')
             ->paginate(15)
             ->withQueryString();
 
+        $programs = Program::orderBy('name')->pluck('name')->toArray();
+
         return Inertia::render('students/Index', [
             'students' => $students,
-            'filters' => $request->only(['search', 'class', 'section']),
+            'programs' => $programs,
+            'sections' => ['A', 'B', 'C'],
+            'filters' => $request->only(['search', 'program_name', 'section']),
         ]);
     }
 
@@ -52,8 +57,11 @@ class StudentController extends Controller
      */
     public function create(): Response
     {
+        $programs = Program::orderBy('name')->get();
+
         return Inertia::render('students/CreateEdit', [
             'student' => null,
+            'programs' => $programs,
         ]);
     }
 
@@ -71,13 +79,14 @@ class StudentController extends Controller
             'parent_mobile' => 'required|string|max:20',
             'permanent_address' => 'required|string',
             'current_address' => 'required|string',
-            'class' => 'required|string',
+            'program_name' => 'required|string|max:255',
             'section' => 'required|string',
             'roll_number' => 'required|integer|min:1',
             'admission_date' => 'required|date',
             'blood_group' => 'nullable|string|max:5',
             'emergency_contact' => 'required|string|max:20',
             'photo' => 'nullable|image|max:2048',
+            'signature' => 'nullable|image|max:2048',
         ]);
 
         // Generate unique Student ID: STU-YYYY-XXXX
@@ -93,6 +102,11 @@ class StudentController extends Controller
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('students', 'public');
             $validated['photo_path'] = $path;
+        }
+
+        if ($request->hasFile('signature')) {
+            $path = $request->file('signature')->store('signatures', 'public');
+            $validated['signature_path'] = $path;
         }
 
         Student::create($validated);
@@ -115,8 +129,11 @@ class StudentController extends Controller
      */
     public function edit(Student $student): Response
     {
+        $programs = Program::orderBy('name')->get();
+
         return Inertia::render('students/CreateEdit', [
             'student' => $student,
+            'programs' => $programs,
         ]);
     }
 
@@ -134,7 +151,7 @@ class StudentController extends Controller
             'parent_mobile' => 'required|string|max:20',
             'permanent_address' => 'required|string',
             'current_address' => 'required|string',
-            'class' => 'required|string',
+            'program_name' => 'required|string|max:255',
             'section' => 'required|string',
             'roll_number' => 'required|integer|min:1',
             'admission_date' => 'required|date',
@@ -142,6 +159,7 @@ class StudentController extends Controller
             'emergency_contact' => 'required|string|max:20',
             'status' => 'required|string|in:active,transferred,inactive',
             'photo' => 'nullable|image|max:2048',
+            'signature' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -150,6 +168,14 @@ class StudentController extends Controller
             }
             $path = $request->file('photo')->store('students', 'public');
             $validated['photo_path'] = $path;
+        }
+
+        if ($request->hasFile('signature')) {
+            if ($student->signature_path !== null) {
+                Storage::disk('public')->delete($student->signature_path);
+            }
+            $path = $request->file('signature')->store('signatures', 'public');
+            $validated['signature_path'] = $path;
         }
 
         $student->update($validated);

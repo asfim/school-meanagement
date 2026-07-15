@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExamResult;
+use App\Models\Program;
 use App\Models\Student;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
@@ -17,12 +18,12 @@ class ResultController extends Controller
      */
     public function index(Request $request): Response
     {
-        $class = $request->input('class', 'Class 6');
+        $programName = $request->input('program_name', 'Science');
         $section = $request->input('section', 'A');
         $examName = $request->input('exam_name', 'First Term Exam');
         $search = $request->input('search');
 
-        $studentsQuery = Student::where('class', $class)
+        $studentsQuery = Student::where('program_name', $programName)
             ->where('section', $section);
 
         if ($request->filled('search')) {
@@ -63,11 +64,11 @@ class ResultController extends Controller
 
         return Inertia::render('results/Index', [
             'reportCard' => $reportCard,
-            'classes' => ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'],
+            'programs' => Program::orderBy('name')->pluck('name')->toArray(),
             'sections' => ['A', 'B', 'C'],
             'examNames' => ['First Term Exam', 'Midterm Exam', 'Annual Exam'],
             'currentFilters' => [
-                'class' => $class,
+                'program_name' => $programName,
                 'section' => $section,
                 'exam_name' => $examName,
                 'search' => $search ?? '',
@@ -80,11 +81,11 @@ class ResultController extends Controller
      */
     public function marksEntry(Request $request): Response
     {
-        $class = $request->input('class', 'Class 6');
+        $programName = $request->input('program_name', 'Science');
         $section = $request->input('section', 'A');
         $examName = $request->input('exam_name', 'First Term Exam');
 
-        $students = Student::where('class', $class)
+        $students = Student::where('program_name', $programName)
             ->where('section', $section)
             ->orderBy('roll_number')
             ->get();
@@ -118,7 +119,7 @@ class ResultController extends Controller
         return Inertia::render('results/MarksEntry', [
             'marksSheet' => $marksSheet,
             'subjects' => $subjects,
-            'class' => $class,
+            'program_name' => $programName,
             'section' => $section,
             'exam_name' => $examName,
         ]);
@@ -130,7 +131,7 @@ class ResultController extends Controller
     public function saveMarks(Request $request): RedirectResponse
     {
         $request->validate([
-            'class' => 'required|string',
+            'program_name' => 'required|string',
             'section' => 'required|string',
             'exam_name' => 'required|string',
             'results' => 'required|array',
@@ -140,7 +141,7 @@ class ResultController extends Controller
         ]);
 
         $examName = $request->input('exam_name');
-        $class = $request->input('class');
+        $programName = $request->input('program_name');
         $section = $request->input('section');
 
         foreach ($request->input('results') as $record) {
@@ -211,7 +212,7 @@ class ResultController extends Controller
                     'exam_name' => $examName,
                 ],
                 [
-                    'class' => $class,
+                    'program_name' => $programName,
                     'section' => $section,
                     'marks' => $parsedMarks,
                     'gpa' => $gpa,
@@ -223,7 +224,7 @@ class ResultController extends Controller
         }
 
         return redirect()->route('results.index', [
-            'class' => $class,
+            'program_name' => $programName,
             'section' => $section,
             'exam_name' => $examName,
         ])->with('success', 'Marks entered and GPA calculated successfully.');

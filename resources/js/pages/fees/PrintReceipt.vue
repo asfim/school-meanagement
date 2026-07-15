@@ -6,7 +6,7 @@ interface Student {
     student_id: string;
     full_name_en: string;
     full_name_native: string;
-    class: string;
+    program_name: string;
     section: string;
     roll_number: number;
 }
@@ -41,7 +41,7 @@ function printReceipt() {
         <!-- Control buttons (hidden on print) -->
         <div class="mb-6 w-full max-w-lg flex justify-between items-center print:hidden">
             <Link
-                :href="'/fees?class=' + payment.student.class + '&section=' + payment.student.section + '&month=' + payment.fee_month"
+                :href="'/fees?program_name=' + payment.student.program_name + '&section=' + payment.student.section + '&month=' + payment.fee_month"
                 class="px-4 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-neutral-50 rounded-lg text-sm font-semibold text-neutral-700 dark:text-neutral-300"
             >
                 &larr; Back to Registry
@@ -86,7 +86,7 @@ function printReceipt() {
                 <div class="grid grid-cols-2 gap-2 mt-1">
                     <div><span class="text-neutral-500">Student Name:</span> <span class="font-bold">{{ payment.student.full_name_en }}</span></div>
                     <div><span class="text-neutral-500">Student ID:</span> <span class="font-bold font-mono">{{ payment.student.student_id }}</span></div>
-                    <div><span class="text-neutral-500">Class:</span> <span class="font-semibold">{{ payment.student.class }} (Sec {{ payment.student.section }})</span></div>
+                    <div><span class="text-neutral-500">Program:</span> <span class="font-semibold">{{ payment.student.program_name }} (Sec {{ payment.student.section }})</span></div>
                     <div><span class="text-neutral-500">Roll Number:</span> <span class="font-semibold">{{ payment.student.roll_number }}</span></div>
                 </div>
             </div>

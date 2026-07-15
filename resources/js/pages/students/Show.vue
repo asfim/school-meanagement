@@ -140,7 +140,7 @@ function issueTc() {
                     <div class="w-full border-t border-neutral-100 dark:border-neutral-800 my-4"></div>
 
                     <div class="w-full text-left space-y-3 text-sm">
-                        <div class="flex justify-between"><span class="text-neutral-500">Class:</span> <span class="font-semibold">{{ student.class }}</span></div>
+                        <div class="flex justify-between"><span class="text-neutral-500">Program:</span> <span class="font-semibold">{{ student.program_name }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Section:</span> <span class="font-semibold">Section {{ student.section }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Roll Number:</span> <span class="font-semibold">{{ student.roll_number }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Blood Group:</span> <span class="font-semibold text-red-650">{{ student.blood_group || 'N/A' }}</span></div>
@@ -211,14 +211,23 @@ function issueTc() {
                                 <div class="text-xs space-y-1">
                                     <div class="font-extrabold text-sm text-neutral-900 dark:text-neutral-100">{{ student.full_name_en }}</div>
                                     <div>ID: <span class="font-bold text-neutral-900 dark:text-neutral-100 font-mono">{{ student.student_id }}</span></div>
-                                    <div>Class: <span class="font-semibold">{{ student.class }} (Sec {{ student.section }})</span></div>
+                                    <div>Program: <span class="font-semibold">{{ student.program_name }} (Sec {{ student.section }})</span></div>
                                     <div>Roll: <span class="font-semibold">{{ student.roll_number }}</span></div>
                                     <div>Emergency: <span class="font-mono text-[10px]">{{ student.emergency_contact }}</span></div>
                                 </div>
                             </div>
                             <!-- Footer logo/bar -->
-                            <div class="text-[8px] text-neutral-400 text-center uppercase tracking-widest border-t border-neutral-200 dark:border-neutral-800 pt-1.5">
-                                Issued: {{ new Date(student.admission_date).getFullYear() }}
+                            <div class="flex items-end justify-between border-t border-neutral-200 dark:border-neutral-800 pt-1.5">
+                                <div class="text-[8px] text-neutral-400 uppercase tracking-widest my-auto">
+                                    Issued: {{ new Date(student.admission_date).getFullYear() }}
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div v-if="student.signature_path" class="h-6 w-20 flex items-center justify-center">
+                                        <img :src="`/storage/${student.signature_path}`" class="max-h-full max-w-full object-contain" />
+                                    </div>
+                                    <div v-else class="h-6 w-20 border-b border-dashed border-neutral-400"></div>
+                                    <div class="text-[6px] text-neutral-400 uppercase tracking-wider mt-0.5">Authority</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -252,7 +261,7 @@ function issueTc() {
                                 was admitted to this institution on <span class="underline">{{ new Date(student.admission_date).toLocaleDateString() }}</span>.
                             </p>
                             <p>
-                                He/She was studying in <span class="font-bold underline">{{ student.class }}</span>, Section <span class="font-bold underline">{{ student.section }}</span> 
+                                He/She was studying in <span class="font-bold underline">{{ student.program_name }}</span>, Section <span class="font-bold underline">{{ student.section }}</span> 
                                 under Roll Number <span class="font-bold underline">{{ student.roll_number }}</span>. 
                                 According to the school registry database, his/her date of birth recorded at admission is 
                                 <span class="font-bold underline">{{ new Date(student.dob).toLocaleDateString() }}</span>.

@@ -217,8 +217,8 @@ function printMarksheet() {
                                         <span class="pr-ms-bio-value pr-mono">{{ resultData.student.student_id }}</span>
                                     </div>
                                     <div class="pr-ms-bio-item">
-                                        <span class="pr-ms-bio-label">Class</span>
-                                        <span class="pr-ms-bio-value">{{ resultData.student.class }} — {{ resultData.student.section }}</span>
+                                        <span class="pr-ms-bio-label">Program</span>
+                                        <span class="pr-ms-bio-value">{{ resultData.student.program_name }} — {{ resultData.student.section }}</span>
                                     </div>
                                     <div class="pr-ms-bio-item">
                                         <span class="pr-ms-bio-label">Roll Number</span>

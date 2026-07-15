@@ -14,13 +14,13 @@ interface StudentMarksRow {
 const props = defineProps<{
     marksSheet: StudentMarksRow[];
     subjects: string[];
-    class: string;
+    program_name: string;
     section: string;
     exam_name: string;
 }>();
 
 const form = useForm({
-    class: props.class,
+    program_name: props.program_name,
     section: props.section,
     exam_name: props.exam_name,
     results: props.marksSheet.map(row => ({
@@ -53,9 +53,9 @@ const breadcrumbs = [
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-neutral-50">Bulk Marks Entry Sheet</h1>
-                    <p class="text-sm text-neutral-500">Record scores for {{ props.class }} (Sec {{ section }}) &mdash; {{ exam_name }}</p>
+                    <p class="text-sm text-neutral-500">Record scores for {{ props.program_name }} (Sec {{ section }}) &mdash; {{ exam_name }}</p>
                 </div>
-                <Link :href="'/results?class=' + props.class + '&section=' + section + '&exam_name=' + exam_name" class="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:underline">&larr; Back</Link>
+                <Link :href="'/results?program_name=' + props.program_name + '&section=' + section + '&exam_name=' + exam_name" class="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:underline">&larr; Back</Link>
             </div>
 
             <!-- Entry Form Sheet -->

@@ -35,10 +35,10 @@ interface PaginatedFeeSheet {
 
 const props = defineProps<{
     feeSheet: PaginatedFeeSheet;
-    classes: string[];
+    programs: string[];
     sections: string[];
     currentFilters: {
-        class: string;
+        program_name: string;
         section: string;
         month: string;
         search?: string;
@@ -50,7 +50,7 @@ const props = defineProps<{
     };
 }>();
 
-const selectedClass = ref(props.currentFilters.class);
+const selectedProgram = ref(props.currentFilters.program_name);
 const selectedSection = ref(props.currentFilters.section);
 const selectedMonth = ref(props.currentFilters.month);
 const search = ref(props.currentFilters.search || '');
@@ -73,7 +73,7 @@ const breadcrumbs = [
 
 function applyFilters() {
     router.get('/fees', {
-        class: selectedClass.value,
+        program_name: selectedProgram.value,
         section: selectedSection.value,
         month: selectedMonth.value,
         search: search.value,
@@ -84,7 +84,7 @@ function applyFilters() {
 }
 
 // Watch filters
-watch([selectedClass, selectedSection, selectedMonth, search], () => {
+watch([selectedProgram, selectedSection, selectedMonth, search], () => {
     applyFilters();
 });
 
@@ -134,15 +134,15 @@ function submitCollection() {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 shadow-sm">
                     <span class="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Total Collections</span>
-                    <span class="text-3xl font-black text-green-600 dark:text-green-400 mt-2 block font-mono">${{ summary.total_collected.toFixed(2) }}</span>
+                    <span class="text-3xl font-black text-green-600 dark:text-green-400 mt-2 block font-mono">${{ Number(summary.total_collected || 0).toFixed(2) }}</span>
                 </div>
                 <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 shadow-sm">
                     <span class="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Outstanding Dues</span>
-                    <span class="text-3xl font-black text-red-500 dark:text-red-400 mt-2 block font-mono">${{ summary.total_dues.toFixed(2) }}</span>
+                    <span class="text-3xl font-black text-red-500 dark:text-red-400 mt-2 block font-mono">${{ Number(summary.total_dues || 0).toFixed(2) }}</span>
                 </div>
                 <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 shadow-sm">
                     <span class="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Discounts Given</span>
-                    <span class="text-3xl font-black text-amber-500 dark:text-amber-400 mt-2 block font-mono">${{ summary.total_discounts.toFixed(2) }}</span>
+                    <span class="text-3xl font-black text-amber-500 dark:text-amber-400 mt-2 block font-mono">${{ Number(summary.total_discounts || 0).toFixed(2) }}</span>
                 </div>
             </div>
 
@@ -166,9 +166,9 @@ function submitCollection() {
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Class *</label>
-                    <select v-model="selectedClass" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
-                        <option v-for="c in classes" :key="c" :value="c">{{ c }}</option>
+                    <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Program *</label>
+                    <select v-model="selectedProgram" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                        <option v-for="p in programs" :key="p" :value="p">{{ p }}</option>
                     </select>
                 </div>
                 <div>

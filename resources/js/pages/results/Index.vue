@@ -32,18 +32,18 @@ interface PaginatedReportCard {
 
 const props = defineProps<{
     reportCard: PaginatedReportCard;
-    classes: string[];
+    programs: string[];
     sections: string[];
     examNames: string[];
     currentFilters: {
-        class: string;
+        program_name: string;
         section: string;
         exam_name: string;
         search?: string;
     };
 }>();
 
-const selectedClass = ref(props.currentFilters.class);
+const selectedProgram = ref(props.currentFilters.program_name);
 const selectedSection = ref(props.currentFilters.section);
 const selectedExam = ref(props.currentFilters.exam_name);
 const search = ref(props.currentFilters.search || '');
@@ -55,7 +55,7 @@ const breadcrumbs = [
 
 function applyFilters() {
     router.get('/results', {
-        class: selectedClass.value,
+        program_name: selectedProgram.value,
         section: selectedSection.value,
         exam_name: selectedExam.value,
         search: search.value,
@@ -66,7 +66,7 @@ function applyFilters() {
 }
 
 // Watch filters to reload page
-watch([selectedClass, selectedSection, selectedExam, search], () => {
+watch([selectedProgram, selectedSection, selectedExam, search], () => {
     applyFilters();
 });
 </script>
@@ -83,10 +83,10 @@ watch([selectedClass, selectedSection, selectedExam, search], () => {
                 </div>
                 <div>
                     <Link
-                        :href="'/results/marks-entry?class=' + selectedClass + '&section=' + selectedSection + '&exam_name=' + selectedExam"
+                        :href="'/results/marks-entry?program_name=' + selectedProgram + '&section=' + selectedSection + '&exam_name=' + selectedExam"
                         class="inline-flex items-center justify-center rounded-lg bg-neutral-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200 shadow transition"
                     >
-                        Enter Class Marks
+                        Enter Program Marks
                     </Link>
                 </div>
             </div>
@@ -109,9 +109,9 @@ watch([selectedClass, selectedSection, selectedExam, search], () => {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Class *</label>
-                    <select v-model="selectedClass" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
-                        <option v-for="c in classes" :key="c" :value="c">{{ c }}</option>
+                    <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Program *</label>
+                    <select v-model="selectedProgram" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                        <option v-for="p in programs" :key="p" :value="p">{{ p }}</option>
                     </select>
                 </div>
                 <div>

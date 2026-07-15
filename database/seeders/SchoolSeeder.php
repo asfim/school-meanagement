@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\ExamResult;
 use App\Models\FeePayment;
 use App\Models\Notice;
+use App\Models\Program;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -29,17 +30,32 @@ class SchoolSeeder extends Seeder
             ]);
         }
 
+        // 1.5 Seed default programs
+        $defaultPrograms = [
+            ['name' => 'Science', 'code' => 'SCI', 'duration_years' => 2],
+            ['name' => 'Arts', 'code' => 'ART', 'duration_years' => 2],
+            ['name' => 'Commerce', 'code' => 'COM', 'duration_years' => 2],
+            ['name' => 'Computer Science', 'code' => 'CSE', 'duration_years' => 4],
+            ['name' => 'Business Administration', 'code' => 'BBA', 'duration_years' => 4],
+        ];
+        foreach ($defaultPrograms as $prog) {
+            Program::updateOrCreate(['name' => $prog['name']], $prog);
+        }
+
+        $scienceProg = Program::where('code', 'SCI')->first();
+        $artsProg = Program::where('code', 'ART')->first();
+
         // Seed default subjects
         $defaultSubjects = [
-            ['name' => 'Mathematics', 'code' => 'MATH101'],
-            ['name' => 'English', 'code' => 'ENG101'],
-            ['name' => 'Science', 'code' => 'SCI101'],
-            ['name' => 'Social Science', 'code' => 'SOC101'],
-            ['name' => 'Physics', 'code' => 'PHY101'],
-            ['name' => 'Chemistry', 'code' => 'CHE101'],
-            ['name' => 'Biology', 'code' => 'BIO101'],
-            ['name' => 'History', 'code' => 'HIS101'],
-            ['name' => 'Geography', 'code' => 'GEO101'],
+            ['name' => 'Mathematics', 'code' => 'MATH101', 'program_id' => $scienceProg->id],
+            ['name' => 'English', 'code' => 'ENG101', 'program_id' => $artsProg->id],
+            ['name' => 'Science', 'code' => 'SCI101', 'program_id' => $scienceProg->id],
+            ['name' => 'Social Science', 'code' => 'SOC101', 'program_id' => $artsProg->id],
+            ['name' => 'Physics', 'code' => 'PHY101', 'program_id' => $scienceProg->id],
+            ['name' => 'Chemistry', 'code' => 'CHE101', 'program_id' => $scienceProg->id],
+            ['name' => 'Biology', 'code' => 'BIO101', 'program_id' => $scienceProg->id],
+            ['name' => 'History', 'code' => 'HIS101', 'program_id' => $artsProg->id],
+            ['name' => 'Geography', 'code' => 'GEO101', 'program_id' => $artsProg->id],
         ];
 
         foreach ($defaultSubjects as $sub) {
@@ -53,35 +69,35 @@ class SchoolSeeder extends Seeder
                 'designation' => 'Senior Teacher (Mathematics)',
                 'email' => 'john.math@school.com',
                 'subjects' => ['Mathematics', 'General Science'],
-                'classes' => ['Class 8', 'Class 9', 'Class 10'],
+                'program_name' => 'Science',
             ],
             [
                 'full_name' => 'Sarah Connor',
                 'designation' => 'Assistant Teacher (English)',
                 'email' => 'sarah.english@school.com',
                 'subjects' => ['English', 'Social Science'],
-                'classes' => ['Class 6', 'Class 7', 'Class 8'],
+                'program_name' => 'Arts',
             ],
             [
                 'full_name' => 'Alan Turing',
                 'designation' => 'Lecturer (Physics)',
                 'email' => 'alan.physics@school.com',
                 'subjects' => ['Physics', 'Mathematics'],
-                'classes' => ['Class 9', 'Class 10'],
+                'program_name' => 'Science',
             ],
             [
                 'full_name' => 'Marie Curie',
                 'designation' => 'Senior Teacher (Chemistry)',
                 'email' => 'marie.chemistry@school.com',
                 'subjects' => ['Chemistry', 'Biology'],
-                'classes' => ['Class 9', 'Class 10'],
+                'program_name' => 'Science',
             ],
             [
                 'full_name' => 'Albert Einstein',
                 'designation' => 'Head of Science Department',
                 'email' => 'albert.science@school.com',
                 'subjects' => ['General Science', 'Physics'],
-                'classes' => ['Class 8', 'Class 9', 'Class 10'],
+                'program_name' => 'Science',
             ],
         ];
 
@@ -97,21 +113,21 @@ class SchoolSeeder extends Seeder
                     'email' => $t['email'],
                     'designation' => $t['designation'],
                     'subjects' => $t['subjects'],
-                    'classes' => $t['classes'],
+                    'program_name' => $t['program_name'],
                     'teacher_id' => $teacherId,
                 ]);
             }
         }
 
         // 3. Create Students
-        $classes = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'];
+        $programsList = ['Science', 'Arts', 'Commerce', 'Computer Science', 'Business Administration'];
         $sections = ['A', 'B'];
         $students = [];
 
         $studentCounter = 1;
-        foreach ($classes as $class) {
+        foreach ($programsList as $programName) {
             foreach ($sections as $section) {
-                // Create 3 students per class & section
+                // Create 3 students per program & section
                 for ($roll = 1; $roll <= 3; $roll++) {
                     $studentId = 'STU-'.date('Y').'-'.sprintf('%04d', $studentCounter++);
                     $existing = Student::where('student_id', $studentId)->first();
@@ -119,7 +135,7 @@ class SchoolSeeder extends Seeder
                         $students[] = $existing;
                     } else {
                         $students[] = Student::factory()->create([
-                            'class' => $class,
+                            'program_name' => $programName,
                             'section' => $section,
                             'roll_number' => $roll,
                             'student_id' => $studentId,
@@ -193,7 +209,7 @@ class SchoolSeeder extends Seeder
             ExamResult::create([
                 'student_id' => $student->id,
                 'exam_name' => 'First Term Exam',
-                'class' => $student->class,
+                'program_name' => $student->program_name,
                 'section' => $student->section,
                 'marks' => $marks,
                 'gpa' => $gpa,
@@ -209,9 +225,9 @@ class SchoolSeeder extends Seeder
         $receiptCounter = 10001;
 
         foreach ($students as $student) {
-            // Assign class monthly fee
+            // Assign program monthly fee
             $monthlyFee = 1500;
-            if ($student->class === 'Class 9' || $student->class === 'Class 10') {
+            if ($student->program_name === 'Computer Science' || $student->program_name === 'Business Administration') {
                 $monthlyFee = 2000;
             }
 
@@ -289,7 +305,7 @@ class SchoolSeeder extends Seeder
         if (! Notice::where('title', 'First Term Exam Schedule 2026')->exists()) {
             Notice::create([
                 'title' => 'First Term Exam Schedule 2026',
-                'description' => 'The First Term Examination for all classes (Class 1 - Class 12) will commence from August 1, 2026. Detailed schedules have been distributed to classroom coordinators. Please ensure all tuition dues are cleared prior to collecting admit cards.',
+                'description' => 'The First Term Examination for all academic programs will commence from August 1, 2026. Detailed schedules have been distributed to classroom coordinators. Please ensure all tuition dues are cleared prior to collecting admit cards.',
                 'category' => 'exam',
                 'publish_date' => date('Y-07-01'),
                 'expiry_date' => date('Y-08-15'),

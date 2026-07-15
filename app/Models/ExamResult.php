@@ -25,7 +25,7 @@ class ExamResult extends Model
     protected $fillable = [
         'student_id',
         'exam_name',
-        'class',
+        'program_name',
         'section',
         'marks',
         'gpa',

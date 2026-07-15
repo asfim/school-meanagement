@@ -461,7 +461,7 @@ function getSubjectGrade(score: number): string {
                                     <div>
                                         <div>Student: <strong>{{ resultData.student.full_name_en }}</strong></div>
                                         <div>ID: <strong>{{ resultData.student.student_id }}</strong></div>
-                                        <div>Class: <strong>{{ resultData.student.class }}</strong></div>
+                                        <div>Program: <strong>{{ resultData.student.program_name }}</strong></div>
                                     </div>
                                     <div style="text-align:right">
                                         <div>Exam: <strong>{{ resultData.result.exam_name }}</strong></div>

@@ -9,7 +9,7 @@ interface Student {
     student_id: string;
     full_name_en: string;
     full_name_native: string;
-    class: string;
+    program_name: string;
     section: string;
     roll_number: number;
     parent_mobile: string;
@@ -27,15 +27,15 @@ const props = defineProps<{
     };
     filters: {
         search?: string;
-        class?: string;
+        program_name?: string;
         section?: string;
     };
-    classes: string[];
+    programs: string[];
     sections: string[];
 }>();
 
 const search = ref(props.filters.search || '');
-const selectedClass = ref(props.filters.class || '');
+const selectedProgram = ref(props.filters.program_name || '');
 const selectedSection = ref(props.filters.section || '');
 
 const breadcrumbs = [
@@ -46,7 +46,7 @@ const breadcrumbs = [
 function applyFilters() {
     router.get('/students', {
         search: search.value,
-        class: selectedClass.value,
+        program_name: selectedProgram.value,
         section: selectedSection.value,
     }, {
         preserveState: true,
@@ -55,7 +55,7 @@ function applyFilters() {
 }
 
 // Watch filters to trigger automatically
-watch([selectedClass, selectedSection], () => {
+watch([selectedProgram, selectedSection], () => {
     applyFilters();
 });
 
@@ -125,11 +125,11 @@ function issueTc(id: number) {
                 </div>
                 <div class="flex gap-4">
                     <select
-                        v-model="selectedClass"
+                        v-model="selectedProgram"
                         class="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2"
                     >
-                        <option value="">All Classes</option>
-                        <option v-for="c in classes" :key="c" :value="c">{{ c }}</option>
+                        <option value="">All Programs</option>
+                        <option v-for="p in programs" :key="p" :value="p">{{ p }}</option>
                     </select>
                     <select
                         v-model="selectedSection"
@@ -155,10 +155,9 @@ function issueTc(id: number) {
                             <tr class="bg-neutral-50 dark:bg-neutral-950 text-neutral-500 dark:text-neutral-400 font-semibold border-b border-neutral-200 dark:border-neutral-800">
                                 <th class="p-4">Student ID</th>
                                 <th class="p-4">Full Name</th>
-                                <th class="p-4">Class & Sec</th>
+                                <th class="p-4">Program & Sec</th>
                                 <th class="p-4 text-center">Roll</th>
                                 <th class="p-4">Parent Mobile</th>
-                                <th class="p-4">Status</th>
                                 <th class="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -169,29 +168,17 @@ function issueTc(id: number) {
                                     <div class="font-semibold text-neutral-950 dark:text-neutral-100">{{ student.full_name_en }}</div>
                                     <div class="text-xs text-neutral-500">{{ student.full_name_native }}</div>
                                 </td>
-                                <td class="p-4">{{ student.class }} ({{ student.section }})</td>
+                                <td class="p-4">{{ student.program_name }} ({{ student.section }})</td>
                                 <td class="p-4 text-center">{{ student.roll_number }}</td>
                                 <td class="p-4">{{ student.parent_mobile }}</td>
-                                <td class="p-4">
-                                    <span v-if="student.status === 'active'" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 border border-green-200 dark:border-green-800">Active</span>
-                                    <span v-else-if="student.status === 'transferred'" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800">Transferred</span>
-                                    <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-neutral-50 text-neutral-700 dark:bg-neutral-950/30 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800">Inactive</span>
-                                </td>
                                 <td class="p-4 text-right space-x-2">
                                     <Link :href="'/students/' + student.id" class="text-neutral-900 dark:text-neutral-100 hover:underline font-semibold">View</Link>
                                     <Link :href="'/students/' + student.id + '/edit'" class="text-neutral-600 dark:text-neutral-400 hover:underline">Edit</Link>
-                                    <button
-                                        v-if="student.status === 'active'"
-                                        @click="issueTc(student.id)"
-                                        class="text-amber-600 hover:text-amber-800 font-semibold"
-                                    >
-                                        TC
-                                    </button>
                                     <button @click="deleteStudent(student.id)" class="text-red-600 hover:text-red-800">Delete</button>
                                 </td>
                             </tr>
                             <tr v-if="students.data.length === 0">
-                                <td colspan="7" class="p-8 text-center text-neutral-500">No students found matching filters.</td>
+                                <td colspan="6" class="p-8 text-center text-neutral-500">No students found matching filters.</td>
                             </tr>
                         </tbody>
                     </table>

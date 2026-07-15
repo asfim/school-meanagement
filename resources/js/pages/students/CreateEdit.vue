@@ -14,7 +14,8 @@ interface Student {
     parent_mobile: string;
     permanent_address: string;
     current_address: string;
-    class: string;
+    program_name: string;
+    signature_path: string | null;
     section: string;
     roll_number: number;
     admission_date: string;
@@ -24,13 +25,19 @@ interface Student {
     photo_path: string | null;
 }
 
+interface Program {
+    id: number;
+    name: string;
+    code: string;
+}
+
 const props = defineProps<{
     student: Student | null;
+    programs: Program[];
 }>();
 
 const isEdit = !!props.student;
 
-const classes = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'];
 const sections = ['A', 'B', 'C'];
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
@@ -44,7 +51,7 @@ const form = useForm({
     parent_mobile: props.student?.parent_mobile || '',
     permanent_address: props.student?.permanent_address || '',
     current_address: props.student?.current_address || '',
-    class: props.student?.class || 'Class 6',
+    program_name: props.student?.program_name || '',
     section: props.student?.section || 'A',
     roll_number: props.student?.roll_number || 1,
     admission_date: props.student ? new Date(props.student.admission_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -52,9 +59,11 @@ const form = useForm({
     emergency_contact: props.student?.emergency_contact || '',
     status: props.student?.status || 'active',
     photo: null as File | null,
+    signature: null as File | null,
 });
 
 const photoPreview = ref<string | null>(null);
+const signaturePreview = ref<string | null>(null);
 
 function selectPhoto(e: Event) {
     const files = (e.target as HTMLInputElement).files;
@@ -63,6 +72,18 @@ function selectPhoto(e: Event) {
         const reader = new FileReader();
         reader.onload = (event) => {
             photoPreview.value = event.target?.result as string;
+        };
+        reader.readAsDataURL(files[0]);
+    }
+}
+
+function selectSignature(e: Event) {
+    const files = (e.target as HTMLInputElement).files;
+    if (files && files[0]) {
+        form.signature = files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            signaturePreview.value = event.target?.result as string;
         };
         reader.readAsDataURL(files[0]);
     }
@@ -107,11 +128,12 @@ const breadcrumbs = [
                     <h2 class="text-lg font-bold border-b border-neutral-100 dark:border-neutral-800 pb-2 text-neutral-900 dark:text-neutral-100">Academic details</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
                         <div>
-                            <label class="block text-sm font-medium mb-1">Class *</label>
-                            <select v-model="form.class" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
-                                <option v-for="c in classes" :key="c" :value="c">{{ c }}</option>
+                            <label class="block text-sm font-medium mb-1">Program *</label>
+                            <select v-model="form.program_name" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                                <option value="">Select Program</option>
+                                <option v-for="p in programs" :key="p.id" :value="p.name">{{ p.name }}</option>
                             </select>
-                            <span v-if="form.errors.class" class="text-xs text-red-500">{{ form.errors.class }}</span>
+                            <span v-if="form.errors.program_name" class="text-xs text-red-500">{{ form.errors.program_name }}</span>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Section *</label>
@@ -171,18 +193,33 @@ const breadcrumbs = [
                     </div>
                 </div>
 
-                <!-- Photo Upload Section -->
-                <div>
-                    <label class="block text-sm font-medium mb-1">Student Photo</label>
-                    <div class="mt-2 flex items-center gap-4">
-                        <div class="h-20 w-20 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center">
-                            <img v-if="photoPreview" :src="photoPreview" class="h-full w-full object-cover" />
-                            <img v-else-if="props.student?.photo_path" :src="`/storage/${props.student.photo_path}`" class="h-full w-full object-cover" />
-                            <span v-else class="text-xs text-neutral-400">No Photo</span>
+                <!-- Photo & Signature Upload Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Student Photo</label>
+                        <div class="mt-2 flex items-center gap-4">
+                            <div class="h-20 w-20 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center">
+                                <img v-if="photoPreview" :src="photoPreview" class="h-full w-full object-cover" />
+                                <img v-else-if="props.student?.photo_path" :src="`/storage/${props.student.photo_path}`" class="h-full w-full object-cover" />
+                                <span v-else class="text-xs text-neutral-400">No Photo</span>
+                            </div>
+                            <input type="file" accept="image/*" @change="selectPhoto" class="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 dark:file:bg-neutral-800 dark:file:text-neutral-300" />
                         </div>
-                        <input type="file" accept="image/*" @change="selectPhoto" class="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 dark:file:bg-neutral-800 dark:file:text-neutral-300" />
+                        <span v-if="form.errors.photo" class="text-xs text-red-500">{{ form.errors.photo }}</span>
                     </div>
-                    <span v-if="form.errors.photo" class="text-xs text-red-500">{{ form.errors.photo }}</span>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Authorization Signature</label>
+                        <div class="mt-2 flex items-center gap-4">
+                            <div class="h-20 w-32 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center">
+                                <img v-if="signaturePreview" :src="signaturePreview" class="h-full w-full object-contain" />
+                                <img v-else-if="props.student?.signature_path" :src="`/storage/${props.student.signature_path}`" class="h-full w-full object-contain" />
+                                <span v-else class="text-xs text-neutral-400">No Signature</span>
+                            </div>
+                            <input type="file" accept="image/*" @change="selectSignature" class="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 dark:file:bg-neutral-800 dark:file:text-neutral-300" />
+                        </div>
+                        <span v-if="form.errors.signature" class="text-xs text-red-500">{{ form.errors.signature }}</span>
+                    </div>
                 </div>
 
                 <!-- Section 3: Parent & Contact Details -->

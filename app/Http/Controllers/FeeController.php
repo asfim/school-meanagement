@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FeePayment;
+use App\Models\Program;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,12 +17,12 @@ class FeeController extends Controller
      */
     public function index(Request $request): Response
     {
-        $class = $request->input('class', 'Class 6');
+        $programName = $request->input('program_name', 'Science');
         $section = $request->input('section', 'A');
         $month = $request->input('month', date('Y-m'));
         $search = $request->input('search');
 
-        $studentsQuery = Student::where('class', $class)
+        $studentsQuery = Student::where('program_name', $programName)
             ->where('section', $section);
 
         if ($request->filled('search')) {
@@ -70,10 +71,10 @@ class FeeController extends Controller
 
         return Inertia::render('fees/Index', [
             'feeSheet' => $feeSheet,
-            'classes' => ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'],
+            'programs' => Program::orderBy('name')->pluck('name')->toArray(),
             'sections' => ['A', 'B', 'C'],
             'currentFilters' => [
-                'class' => $class,
+                'program_name' => $programName,
                 'section' => $section,
                 'month' => $month,
                 'search' => $search ?? '',
@@ -92,7 +93,7 @@ class FeeController extends Controller
     public function billing(): Response
     {
         return Inertia::render('fees/Billing', [
-            'classes' => ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'],
+            'programs' => Program::orderBy('name')->pluck('name')->toArray(),
         ]);
     }
 
@@ -102,16 +103,16 @@ class FeeController extends Controller
     public function generateBilling(Request $request): RedirectResponse
     {
         $request->validate([
-            'class' => 'required|string',
+            'program_name' => 'required|string',
             'month' => 'required|string|regex:/^\d{4}-\d{2}$/',
             'amount' => 'required|numeric|min:0',
         ]);
 
-        $class = $request->input('class');
+        $programName = $request->input('program_name');
         $month = $request->input('month');
         $amount = $request->input('amount');
 
-        $students = Student::where('class', $class)->where('status', 'active')->get();
+        $students = Student::where('program_name', $programName)->where('status', 'active')->get();
 
         $count = 0;
         foreach ($students as $student) {
@@ -134,7 +135,7 @@ class FeeController extends Controller
             }
         }
 
-        return redirect()->route('fees.index', ['class' => $class, 'month' => $month])
+        return redirect()->route('fees.index', ['program_name' => $programName, 'month' => $month])
             ->with('success', "Billing generated successfully for {$count} students.");
     }
 

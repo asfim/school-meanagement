@@ -31,7 +31,7 @@ class StudentFactory extends Factory
             'parent_mobile' => '01'.fake()->numberBetween(300000000, 999999999),
             'permanent_address' => fake()->address(),
             'current_address' => fake()->address(),
-            'class' => fake()->randomElement(['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12']),
+            'program_name' => fake()->randomElement(['B.Sc. in Computer Science', 'Bachelor of Business Administration', 'B.Sc. in Physics', 'B.A. in English']),
             'section' => fake()->randomElement(['A', 'B', 'C']),
             'roll_number' => fake()->numberBetween(1, 60),
             'admission_date' => fake()->dateTimeBetween('-2 years', 'now')->format('Y-m-d'),
