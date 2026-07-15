@@ -180,15 +180,7 @@ function submitCollection() {
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50">Tuition Fee Registry</h1>
-                    <p class="mt-1 text-sm text-neutral-500">Generate monthly student fee schedules, log fee payments, and issue official print receipts.</p>
-                </div>
-                <div class="flex gap-2">
-                    <Link
-                        href="/fees/billing"
-                        class="inline-flex items-center justify-center rounded-lg bg-neutral-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200 shadow transition"
-                    >
-                        Generate Monthly Bills
-                    </Link>
+                    <p class="mt-1 text-sm text-neutral-500">Log fee payments and issue official print receipts.</p>
                 </div>
             </div>
 
