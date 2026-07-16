@@ -724,7 +724,7 @@ function getSubjectGrade(score: number): string {
         <footer class="sv-footer">
             <div class="sv-footer-inner">
                 <div><strong>{{ siteSettings.institute_name }}</strong> · {{ siteSettings.tagline }}</div>
-                <div>© 2026 · All rights reserved</div>
+                <div>© 2026 · All rights reserved · Developed By <a href="https://crownsit.com" target="_blank" rel="noopener" style="color:var(--sv-brass);text-decoration:underline">Crowns IT</a></div>
             </div>
         </footer>
     </div>
@@ -1201,7 +1201,7 @@ a { color: inherit; text-decoration: none; }
 .sv-contact-line { font-size: 14px; line-height: 2.1; color: rgba(255,255,255,0.75); margin: 0; }
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
-.sv-footer { background: var(--sv-forest-dark); color: rgba(255,255,255,0.7); padding: 28px 24px; position: relative; z-index: 1; }
+.sv-footer { background: black; color: rgba(255,255,255,0.7); padding: 28px 24px; position: relative; z-index: 1; }
 .sv-footer-inner {
     max-width: 1200px; margin: 0 auto;
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12.5px;

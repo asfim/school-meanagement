@@ -296,7 +296,7 @@ function printMarksheet() {
         <footer class="pr-footer">
             <div class="pr-footer-inner">
                 <div><strong>{{ siteSettings.institute_name }}</strong> · {{ siteSettings.tagline }}</div>
-                <div>© 2026 · All rights reserved</div>
+                <div>© 2026 · All rights reserved · Developed By <a href="https://crownsit.com" target="_blank" rel="noopener" style="color:#b8860b;text-decoration:underline">Crowns IT</a></div>
             </div>
         </footer>
     </div>
