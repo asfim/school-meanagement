@@ -73,6 +73,7 @@ const props = defineProps<{
 }>();
 
 const selectedSemesterId = ref<string>(props.filters.semester_id || '');
+const mobileMenuOpen = ref(false);
 const filteredExams = computed(() => {
     const sem = props.semesters.find(s => s.id === Number(selectedSemesterId.value));
     return sem ? sem.exams : [];
@@ -214,8 +215,51 @@ function printMarksheet() {
                         class="pr-nav-cta"
                     >Staff Login</Link>
                 </nav>
+
+                <!-- Burger Button -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="sv-burger-btn" aria-label="Toggle Menu">
+                    <span :class="{ 'sv-burger-line--open': mobileMenuOpen }"></span>
+                    <span :class="{ 'sv-burger-line--open': mobileMenuOpen }"></span>
+                    <span :class="{ 'sv-burger-line--open': mobileMenuOpen }"></span>
+                </button>
             </div>
         </header>
+
+        <!-- Mobile Navigation Drawer -->
+        <div class="sv-mobile-menu" :class="{ 'sv-mobile-menu--open': mobileMenuOpen }">
+            <div class="sv-mobile-menu-content">
+                <div class="sv-mobile-menu-header">
+                    <div class="pr-brand">
+                        <img v-if="siteSettings.logo_path" :src="'/storage/' + siteSettings.logo_path" class="w-8 h-8 object-contain rounded-md" alt="Logo" />
+                        <div v-else class="pr-crest">SV</div>
+                        <div class="pr-brand-text">
+                            <div class="pr-school-name" style="font-size: 16px;">{{ siteSettings.institute_name }}</div>
+                        </div>
+                    </div>
+                    <button @click="mobileMenuOpen = false" class="sv-close-btn">&times;</button>
+                </div>
+                <nav class="sv-mobile-nav">
+                    <Link href="/" class="sv-mobile-link" @click="mobileMenuOpen = false">Home</Link>
+                    <Link href="/#notices" class="sv-mobile-link" @click="mobileMenuOpen = false">Notice Board</Link>
+                    <Link href="/#about" class="sv-mobile-link" @click="mobileMenuOpen = false">About Us</Link>
+                    <Link href="/#programs" class="sv-mobile-link" @click="mobileMenuOpen = false">Programs</Link>
+                    <Link href="/result" class="sv-mobile-link" @click="mobileMenuOpen = false">Results</Link>
+                    <Link href="/#contact" class="sv-mobile-link" @click="mobileMenuOpen = false">Contact</Link>
+                    <Link
+                        v-if="$page.props.auth?.user"
+                        :href="route('dashboard')"
+                        class="sv-mobile-cta"
+                        @click="mobileMenuOpen = false"
+                    >Dashboard</Link>
+                    <Link
+                        v-else
+                        :href="route('login')"
+                        class="sv-mobile-cta"
+                        @click="mobileMenuOpen = false"
+                    >Staff Login</Link>
+                </nav>
+            </div>
+        </div>
 
         <!-- Hero -->
         <section class="pr-hero">
@@ -780,6 +824,119 @@ a { color: inherit; text-decoration: none; }
     text-align: center; padding: 10px 28px 14px;
     font-family: 'IBM Plex Mono', monospace; font-size: 10px;
     color: var(--soft); border-top: 1px dashed var(--line);
+}
+
+/* Burger button */
+.sv-burger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 60;
+}
+.sv-burger-btn span {
+    width: 100%;
+    height: 2px;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+@media (max-width: 760px) {
+    .sv-burger-btn {
+        display: flex;
+    }
+}
+.sv-burger-line--open:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+.sv-burger-line--open:nth-child(2) {
+    opacity: 0;
+}
+.sv-burger-line--open:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Mobile Drawer Overlay */
+.sv-mobile-menu {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 33, 61, 0.5);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.sv-mobile-menu--open {
+    opacity: 1;
+    pointer-events: auto;
+}
+.sv-mobile-menu-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100%;
+    background: var(--sv-ink, #14213D);
+    color: #fff;
+    padding: 24px;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.sv-mobile-menu--open .sv-mobile-menu-content {
+    transform: translateX(0);
+}
+.sv-mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 16px;
+}
+.sv-close-btn {
+    font-size: 28px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    line-height: 1;
+}
+.sv-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.sv-mobile-link {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.8);
+    transition: color 0.2s;
+    padding: 8px 0;
+}
+.sv-mobile-link:hover {
+    color: var(--brass, #C89B3C);
+}
+.sv-mobile-cta {
+    margin-top: 16px;
+    display: block;
+    text-align: center;
+    padding: 10px;
+    background: var(--brass, #C89B3C);
+    color: var(--ink, #14213D);
+    border-radius: 8px;
+    font-weight: 700;
+    transition: background 0.2s;
+}
+.sv-mobile-cta:hover {
+    background: var(--brass-dark, #A87F2B);
+    color: #fff;
 }
 
 /* Footer */
