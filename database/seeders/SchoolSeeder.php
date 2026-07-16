@@ -21,11 +21,11 @@ class SchoolSeeder extends Seeder
     public function run(): void
     {
         // 1. Create default admin if not exists
-        if (! User::where('email', 'admin@school.com')->exists()) {
+        if (! User::where('email', 'ipi.67055@gmail.com')->exists()) {
             User::create([
                 'name' => 'School Admin',
-                'email' => 'admin@school.com',
-                'password' => Hash::make('password'),
+                'email' => 'ipi.67055@gmail.com',
+                'password' => Hash::make('12345678'),
                 'email_verified_at' => now(),
             ]);
         }
