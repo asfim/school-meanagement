@@ -13,6 +13,7 @@ interface Teacher {
     mobile: string;
     subjects: string[];
     program_names: string[];
+    photo_path?: string | null;
 }
 
 const props = defineProps<{
@@ -120,10 +121,22 @@ function deleteTeacher(id: number) {
                     class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition"
                 >
                     <div class="space-y-4">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-xs font-bold text-neutral-400 font-mono tracking-widest">{{ teacher.teacher_id }}</span>
-                                <h3 class="text-lg font-bold text-neutral-950 dark:text-neutral-50 mt-1">{{ teacher.full_name }}</h3>
+                        <div class="flex items-start gap-4">
+                            <img
+                                v-if="teacher.photo_path"
+                                :src="'/storage/' + teacher.photo_path"
+                                class="w-14 h-14 rounded-full object-cover border border-neutral-200 dark:border-neutral-800 shadow-sm"
+                                alt="Teacher photo"
+                            />
+                            <div
+                                v-else
+                                class="w-14 h-14 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-xl border border-neutral-200 dark:border-neutral-800"
+                            >
+                                👤
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="text-xs font-bold text-neutral-400 font-mono tracking-widest block">{{ teacher.teacher_id }}</span>
+                                <h3 class="text-lg font-bold text-neutral-950 dark:text-neutral-50 mt-0.5 truncate">{{ teacher.full_name }}</h3>
                                 <p class="text-xs text-neutral-500 font-semibold mt-0.5">{{ teacher.designation }}</p>
                             </div>
                         </div>
