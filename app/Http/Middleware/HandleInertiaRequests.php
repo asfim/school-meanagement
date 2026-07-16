@@ -51,6 +51,12 @@ class HandleInertiaRequests extends Middleware
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
             ],
+            'site_settings' => \App\Models\SiteSetting::first() ?? [
+                'institute_name' => 'Saraswati Vidyaniketan',
+                'tagline' => 'EST. 1986 · DHAKA',
+                'logo_path' => null,
+                'favicon_path' => null,
+            ],
         ]);
     }
 }

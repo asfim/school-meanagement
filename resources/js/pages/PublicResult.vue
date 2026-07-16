@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage();
+const siteSettings = computed(() => page.props.site_settings as {
+    institute_name: string;
+    tagline: string;
+    logo_path: string | null;
+    favicon_path: string | null;
+});
 
 interface Student {
     student_id: string;
@@ -69,7 +78,7 @@ function printMarksheet() {
 </script>
 
 <template>
-    <Head title="Student Result — Saraswati Vidyaniketan" />
+    <Head :title="'Student Result — ' + siteSettings.institute_name" />
 
     <div class="pr-root">
         <!-- Paper texture -->
@@ -79,10 +88,11 @@ function printMarksheet() {
         <header class="pr-header">
             <div class="pr-topbar">
                 <Link href="/" class="pr-brand">
-                    <div class="pr-crest">SV</div>
+                    <img v-if="siteSettings.logo_path" :src="'/storage/' + siteSettings.logo_path" class="w-10 h-10 object-contain rounded-md mr-2" alt="Logo" />
+                    <div v-else class="pr-crest">SV</div>
                     <div class="pr-brand-text">
-                        <div class="pr-school-name">Saraswati Vidyaniketan</div>
-                        <div class="pr-school-tag">EST. 1986 · DHAKA</div>
+                        <div class="pr-school-name">{{ siteSettings.institute_name }}</div>
+                        <div class="pr-school-tag">{{ siteSettings.tagline }}</div>
                     </div>
                 </Link>
                 <nav class="pr-nav">
@@ -187,9 +197,10 @@ function printMarksheet() {
                         <div id="printable-marksheet" class="pr-marksheet">
                             <!-- School Header -->
                             <div class="pr-ms-header">
-                                <div class="pr-ms-crest">SV</div>
+                                <img v-if="siteSettings.logo_path" :src="'/storage/' + siteSettings.logo_path" class="w-12 h-12 object-contain rounded-md mr-3" alt="Logo" />
+                                <div v-else class="pr-ms-crest">SV</div>
                                 <div>
-                                    <h2>Saraswati Vidyaniketan</h2>
+                                    <h2>{{ siteSettings.institute_name }}</h2>
                                     <p>Student Academic Mark Sheet — Official Copy</p>
                                 </div>
                             </div>
@@ -273,7 +284,7 @@ function printMarksheet() {
 
                             <!-- Official note -->
                             <div class="pr-ms-official">
-                                This is a computer-generated mark sheet. Saraswati Vidyaniketan · Dhaka, Bangladesh
+                                This is a computer-generated mark sheet. {{ siteSettings.institute_name }} · {{ siteSettings.tagline }}
                             </div>
                         </div>
                     </div>
@@ -284,7 +295,7 @@ function printMarksheet() {
         <!-- Footer -->
         <footer class="pr-footer">
             <div class="pr-footer-inner">
-                <div><strong>Saraswati Vidyaniketan</strong> · Dhaka, Bangladesh</div>
+                <div><strong>{{ siteSettings.institute_name }}</strong> · {{ siteSettings.tagline }}</div>
                 <div>© 2026 · All rights reserved</div>
             </div>
         </footer>

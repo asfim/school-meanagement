@@ -9,6 +9,9 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="{{ \App\Models\SiteSetting::first()?->favicon_path ? asset('storage/' . \App\Models\SiteSetting::first()->favicon_path) : asset('favicon.ico') }}">
+
         @routes
         @vite(['resources/js/app.ts'])
         @inertiaHead

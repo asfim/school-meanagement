@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+
+const page = usePage();
+const siteSettings = computed(() => page.props.site_settings as {
+    institute_name: string;
+    tagline: string;
+    logo_path: string | null;
+    favicon_path: string | null;
+});
 import FlashToast from '@/components/FlashToast.vue';
 
 interface Banner {
@@ -248,10 +256,11 @@ function getSubjectGrade(score: number): string {
         <header class="sv-header">
             <div class="sv-topbar">
                 <div class="sv-brand">
-                    <div class="sv-crest">SV</div>
+                    <img v-if="siteSettings.logo_path" :src="'/storage/' + siteSettings.logo_path" class="w-10 h-10 object-contain rounded-md mr-2" alt="Logo" />
+                    <div v-else class="sv-crest">SV</div>
                     <div class="sv-brand-text">
-                        <div class="sv-school-name">Saraswati Vidyaniketan</div>
-                        <div class="sv-school-tag">EST. 1986 · DHAKA</div>
+                        <div class="sv-school-name">{{ siteSettings.institute_name }}</div>
+                        <div class="sv-school-tag">{{ siteSettings.tagline }}</div>
                     </div>
                 </div>
                 <nav class="sv-nav">
@@ -461,7 +470,7 @@ function getSubjectGrade(score: number): string {
                             </div>
                             <div id="printable-report-card" class="sv-marksheet">
                                 <div class="sv-marksheet-header">
-                                    <h2>Saraswati Vidyaniketan</h2>
+                                    <h2>{{ siteSettings.institute_name }}</h2>
                                     <p>Student Academic Mark Sheet</p>
                                 </div>
                                 <div class="sv-marksheet-bio">
@@ -547,7 +556,7 @@ function getSubjectGrade(score: number): string {
                             </div>
                             <div id="printable-fee-statement" class="sv-marksheet">
                                 <div class="sv-marksheet-header">
-                                    <h2>Saraswati Vidyaniketan</h2>
+                                    <h2>{{ siteSettings.institute_name }}</h2>
                                     <p>Tuition Fee Statement Ledger</p>
                                 </div>
                                 <table class="sv-table">
@@ -683,7 +692,7 @@ function getSubjectGrade(score: number): string {
         <!-- ── Footer ─────────────────────────────────────────────── -->
         <footer class="sv-footer">
             <div class="sv-footer-inner">
-                <div><strong>Saraswati Vidyaniketan</strong> · Dhaka, Bangladesh</div>
+                <div><strong>{{ siteSettings.institute_name }}</strong> · {{ siteSettings.tagline }}</div>
                 <div>© 2026 · All rights reserved</div>
             </div>
         </footer>
