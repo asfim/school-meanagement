@@ -24,7 +24,7 @@ class ResultController extends Controller
         $section = $request->input('section');
         $search = $request->input('search');
 
-        $query = Student::with(['semester', 'latestResult.semester', 'latestResult.semesterExam']);
+        $query = Student::with(['semester', 'latestResult.semester', 'latestResult.semesterExam', 'examResults.semesterExam']);
 
         if ($request->filled('program_name')) {
             $query->where('program_name', $programName);
@@ -48,6 +48,9 @@ class ResultController extends Controller
 
         $reportCardData = collect($students->items())->map(function ($student) {
             $res = $student->latestResult;
+            $hasResult = $student->examResults->isNotEmpty();
+            $cgpa = $hasResult ? $student->calculateCgpa() : 0.00;
+            $cgpaGrade = $hasResult ? $student->calculateCgpaGrade($cgpa) : 'N/A';
 
             return [
                 'student_id' => $student->id,
@@ -57,10 +60,10 @@ class ResultController extends Controller
                 'section' => $student->section,
                 'current_semester' => $student->semester ? $student->semester->name : 'N/A',
                 'latest_exam_name' => $res && $res->semesterExam ? $res->semesterExam->name : ($res ? $res->exam_name : 'N/A'),
-                'has_result' => $res !== null,
+                'has_result' => $hasResult,
                 'result_id' => $res ? $res->id : null,
-                'gpa' => $res ? $res->gpa : null,
-                'grade' => $res ? $res->grade : null,
+                'gpa' => $hasResult ? number_format($cgpa, 2) : null,
+                'grade' => $hasResult ? $cgpaGrade : null,
                 'pass_status' => $res ? $res->pass_status : null,
             ];
         });
@@ -179,12 +182,26 @@ class ResultController extends Controller
 
         $semesterExam = SemesterExam::findOrFail($semesterExamId);
 
+        $existingResult = ExamResult::where([
+            'student_id' => $studentId,
+            'semester_id' => $semesterId,
+            'semester_exam_id' => $semesterExamId,
+        ])->first();
+
+        $existingMarks = $existingResult && is_array($existingResult->marks) ? $existingResult->marks : [];
+
         $totalGp = 0;
         $failed = false;
         $subjectCount = 0;
         $parsedMarks = [];
 
-        foreach ($marks as $subject => $score) {
+        $allSubjects = array_unique(array_merge(array_keys($existingMarks), array_keys($marks)));
+
+        foreach ($allSubjects as $subject) {
+            $score = isset($marks[$subject]) && $marks[$subject] !== '' && $marks[$subject] !== null
+                ? $marks[$subject]
+                : ($existingMarks[$subject] ?? null);
+
             if ($score === '' || $score === null) {
                 continue;
             }
@@ -195,19 +212,17 @@ class ResultController extends Controller
 
             // Grade Point logic
             if ($score >= 80) {
-                $gp = 5.0;
+                $gp = 4.00;
             } elseif ($score >= 70) {
-                $gp = 4.0;
+                $gp = 3.50;
             } elseif ($score >= 60) {
-                $gp = 3.5;
+                $gp = 3.00;
             } elseif ($score >= 50) {
-                $gp = 3.0;
+                $gp = 2.50;
             } elseif ($score >= 40) {
-                $gp = 2.0;
-            } elseif ($score >= 33) {
-                $gp = 1.0;
+                $gp = 2.00;
             } else {
-                $gp = 0.0;
+                $gp = 0.00;
                 $failed = true;
             }
 
@@ -218,20 +233,18 @@ class ResultController extends Controller
             return redirect()->back()->withErrors(['marks' => 'Please enter marks for at least one subject.']);
         }
 
-        $gpa = $failed ? 0.0 : round($totalGp / $subjectCount, 2);
+        $gpa = $failed ? 0.00 : round($totalGp / $subjectCount, 2);
 
         // Grade calculation
-        if ($gpa >= 5.0) {
+        if ($gpa >= 4.00) {
             $grade = 'A+';
-        } elseif ($gpa >= 4.0) {
+        } elseif ($gpa >= 3.50) {
             $grade = 'A';
-        } elseif ($gpa >= 3.5) {
-            $grade = 'A-';
-        } elseif ($gpa >= 3.0) {
+        } elseif ($gpa >= 3.00) {
             $grade = 'B';
-        } elseif ($gpa >= 2.0) {
+        } elseif ($gpa >= 2.50) {
             $grade = 'C';
-        } elseif ($gpa >= 1.0) {
+        } elseif ($gpa >= 2.00) {
             $grade = 'D';
         } else {
             $grade = 'F';

@@ -96,9 +96,9 @@ function canAddMarks(student: StudentRow): boolean {
         return true;
     }
 
-    // Check if there is any failed subject (score < 33) in the current semester
+    // Check if there is any failed subject (score < 40) in the current semester
     const hasFail = currentSemesterResults.some(res => {
-        return Object.values(res.marks).some(score => score !== '' && Number(score) < 33);
+        return Object.values(res.marks).some(score => score !== '' && Number(score) < 40);
     });
 
     if (hasFail) {
@@ -150,7 +150,7 @@ function getSubjectStatus(sub: string) {
     }
 
     const numScore = Number(score);
-    if (numScore < 33) {
+    if (numScore < 40) {
         return { text: 'Failed', class: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800' };
     } else if (numScore < 60) {
         return { text: 'Improvement (<60)', class: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800' };

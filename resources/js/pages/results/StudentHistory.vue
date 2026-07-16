@@ -87,12 +87,11 @@ const cgpa = computed(() => {
 const cgpaGrade = computed(() => {
     const score = parseFloat(cgpa.value);
     if (isNaN(score) || score <= 0) return 'N/A';
-    if (score >= 5.0) return 'A+';
-    if (score >= 4.0) return 'A';
-    if (score >= 3.5) return 'A-';
+    if (score >= 4.0) return 'A+';
+    if (score >= 3.5) return 'A';
     if (score >= 3.0) return 'B';
-    if (score >= 2.0) return 'C';
-    if (score >= 1.0) return 'D';
+    if (score >= 2.5) return 'C';
+    if (score >= 2.0) return 'D';
     return 'F';
 });
 
@@ -177,8 +176,8 @@ function printHistory() {
                                                 <td class="p-2">{{ subject }}</td>
                                                 <td class="p-2 text-right font-mono font-bold">{{ marks }}</td>
                                                 <td class="p-2 text-center font-bold">
-                                                    <span :class="marks >= 33 ? 'text-neutral-900 dark:text-neutral-200' : 'text-red-500'">
-                                                        {{ marks >= 80 ? 'A+' : (marks >= 70 ? 'A' : (marks >= 60 ? 'A-' : (marks >= 50 ? 'B' : (marks >= 40 ? 'C' : (marks >= 33 ? 'D' : 'F'))))) }}
+                                                    <span :class="marks >= 40 ? 'text-neutral-900 dark:text-neutral-200' : 'text-red-500'">
+                                                        {{ marks >= 80 ? 'A+' : (marks >= 70 ? 'A' : (marks >= 60 ? 'B' : (marks >= 50 ? 'C' : (marks >= 40 ? 'D' : 'F')))) }}
                                                     </span>
                                                 </td>
                                             </tr>

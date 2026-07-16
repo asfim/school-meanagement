@@ -112,10 +112,10 @@ test('admin can enter marks and calculate GPA & Grade', function () {
         'semester_id' => $semester->id,
         'semester_exam_id' => $exam->id,
         'marks' => [
-            'Mathematics' => 85, // GP: 5.0
-            'English' => 75,       // GP: 4.0
-            'Science' => 65,       // GP: 3.5
-            'Social Science' => 55, // GP: 3.0
+            'Mathematics' => 85, // GP: 4.00
+            'English' => 75,       // GP: 3.50
+            'Science' => 65,       // GP: 3.00
+            'Social Science' => 55, // GP: 2.50
         ],
         'remarks' => 'Good job',
     ]);
@@ -125,8 +125,8 @@ test('admin can enter marks and calculate GPA & Grade', function () {
         'student_id' => $student->id,
         'semester_id' => $semester->id,
         'semester_exam_id' => $exam->id,
-        'gpa' => 3.88,
-        'grade' => 'A-',
+        'gpa' => 3.25,
+        'grade' => 'B',
         'pass_status' => 'pass',
     ]);
 });
@@ -390,5 +390,102 @@ test('marks entry screen flags last semester students and includes existing resu
         ->where('students.data.0.exam_results.0.semester_exam_id', $exam->id)
         ->where('students.data.0.exam_results.0.marks.Mathematics', 80)
         ->where('students.data.0.exam_results.0.marks.English', 25)
+    );
+});
+
+test('saving marks merges with existing marks and does not overwrite empty inputs', function () {
+    $admin = User::factory()->create();
+    $semester = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $exam = SemesterExam::create([
+        'semester_id' => $semester->id,
+        'name' => 'Midterm Exam',
+        'is_final' => false,
+        'sort_order' => 1,
+    ]);
+
+    $student = Student::factory()->create([
+        'program_name' => 'Science',
+        'section' => 'A',
+        'semester_id' => $semester->id,
+    ]);
+
+    // Pre-create exam results where Math is 80 (passed) and English is 25 (failed)
+    ExamResult::create([
+        'student_id' => $student->id,
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'exam_name' => 'Midterm Exam',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'marks' => ['Mathematics' => 80, 'English' => 25],
+        'gpa' => 2.50,
+        'grade' => 'C',
+        'pass_status' => 'fail',
+    ]);
+
+    // Submit new marks where Mathematics is omitted (empty) and English is updated to 45
+    $response = $this->actingAs($admin)->post('/results/marks-entry', [
+        'student_id' => $student->id,
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'marks' => [
+            'Mathematics' => '',
+            'English' => 45,
+        ],
+        'remarks' => 'Updated English score',
+    ]);
+
+    $response->assertRedirect();
+
+    // The final result should contain Mathematics 80 (merged) and English 45 (updated)
+    $this->assertDatabaseHas('exam_results', [
+        'student_id' => $student->id,
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'marks' => json_encode(['Mathematics' => 80, 'English' => 45]),
+    ]);
+});
+
+test('admin can view results tabulation index page and see computed CGPA', function () {
+    $admin = User::factory()->create();
+    $semester = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $exam = SemesterExam::create([
+        'semester_id' => $semester->id,
+        'name' => 'Final Exam',
+        'is_final' => true,
+        'sort_order' => 1,
+    ]);
+
+    $student = Student::factory()->create([
+        'full_name_en' => 'Jane Tabulation',
+        'student_id' => 'STU-98765',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'roll_number' => 12,
+        'semester_id' => $semester->id,
+    ]);
+
+    // Create an exam result (Math 80 = GP 4.0, English 80 = GP 4.0 -> CGPA = 4.0)
+    ExamResult::create([
+        'student_id' => $student->id,
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'exam_name' => 'Final Exam',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'marks' => ['Mathematics' => 80, 'English' => 80],
+        'gpa' => 4.00,
+        'grade' => 'A+',
+        'pass_status' => 'pass',
+    ]);
+
+    $response = $this->actingAs($admin)->get('/results?program_name=Science&section=A');
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('results/Index')
+        ->where('reportCard.data.0.student_uid', 'STU-98765')
+        ->where('reportCard.data.0.gpa', '4.00')
+        ->where('reportCard.data.0.grade', 'A+')
     );
 });

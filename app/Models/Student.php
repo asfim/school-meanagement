@@ -90,4 +90,77 @@ class Student extends Model
     {
         return $this->hasOne(ExamResult::class)->latestOfMany();
     }
+
+    /**
+     * Calculate CGPA for the student.
+     */
+    public function calculateCgpa(): float
+    {
+        $examResults = $this->examResults;
+        if ($examResults->isEmpty()) {
+            return 0.00;
+        }
+
+        // Group by semester_id
+        $groupedHistory = $examResults->groupBy('semester_id');
+        $semesterCount = $groupedHistory->count();
+
+        if ($semesterCount >= 8) {
+            $totalFinalGpa = 0.00;
+            $finalExamCount = 0;
+
+            foreach ($groupedHistory as $semesterId => $exams) {
+                // Find final exam in these exams
+                $finalExam = $exams->first(function ($res) {
+                    return $res->semesterExam && $res->semesterExam->is_final;
+                });
+
+                if ($finalExam) {
+                    $totalFinalGpa += (float) $finalExam->gpa;
+                    $finalExamCount++;
+                } else {
+                    // Fall back to latest exam of that semester
+                    $lastExam = $exams->sortBy('id')->last();
+                    if ($lastExam) {
+                        $totalFinalGpa += (float) $lastExam->gpa;
+                        $finalExamCount++;
+                    }
+                }
+            }
+
+            return $finalExamCount > 0 ? round($totalFinalGpa / $finalExamCount, 2) : 0.00;
+        } else {
+            // Show last exam's GPA
+            $lastExam = $examResults->sortBy('id')->last();
+
+            return $lastExam ? round((float) $lastExam->gpa, 2) : 0.00;
+        }
+    }
+
+    /**
+     * Calculate Grade Letter for the CGPA.
+     */
+    public function calculateCgpaGrade(float $cgpa): string
+    {
+        if ($cgpa <= 0) {
+            return 'N/A';
+        }
+        if ($cgpa >= 4.00) {
+            return 'A+';
+        }
+        if ($cgpa >= 3.50) {
+            return 'A';
+        }
+        if ($cgpa >= 3.00) {
+            return 'B';
+        }
+        if ($cgpa >= 2.50) {
+            return 'C';
+        }
+        if ($cgpa >= 2.00) {
+            return 'D';
+        }
+
+        return 'F';
+    }
 }
