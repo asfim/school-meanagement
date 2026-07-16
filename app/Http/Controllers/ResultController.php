@@ -108,16 +108,13 @@ class ResultController extends Controller
         }
 
         $semesters = Semester::with('exams')->orderBy('sort_order')->get();
-        $maxSortOrder = $semesters->max('sort_order');
 
         return Inertia::render('results/MarksEntry', [
-            'students' => $students->map(function ($s) use ($maxSortOrder) {
-                $isLastSemester = $s->semester && $s->semester->sort_order === $maxSortOrder;
-
-                $currentSemesterResults = $s->examResults
-                    ->where('semester_id', $s->semester_id)
+            'students' => $students->map(function ($s) {
+                $examResults = $s->examResults
                     ->map(function ($res) {
                         return [
+                            'semester_id' => $res->semester_id,
                             'semester_exam_id' => $res->semester_exam_id,
                             'marks' => $res->marks,
                             'pass_status' => $res->pass_status,
@@ -134,8 +131,7 @@ class ResultController extends Controller
                     'program_name' => $s->program_name,
                     'current_semester' => $s->semester ? $s->semester->name : 'N/A',
                     'semester_id' => $s->semester_id,
-                    'is_last_semester' => $isLastSemester,
-                    'current_semester_results' => $currentSemesterResults,
+                    'exam_results' => $examResults,
                 ];
             }),
             'subjects' => $subjects,

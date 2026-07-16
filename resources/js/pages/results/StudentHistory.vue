@@ -14,6 +14,7 @@ interface ResultHistoryItem {
     gpa: string;
     grade: string;
     pass_status: 'pass' | 'fail';
+    is_final: boolean;
     date: string;
 }
 
@@ -39,18 +40,48 @@ const breadcrumbs = [
 ];
 
 const cgpa = computed(() => {
-    let totalGpa = 0;
-    let examCount = 0;
-    Object.values(props.groupedHistory).forEach(exams => {
-        exams.forEach(exam => {
-            const val = parseFloat(exam.gpa);
-            if (!isNaN(val)) {
-                totalGpa += val;
-                examCount++;
+    const semesters = Object.keys(props.groupedHistory);
+    const semesterCount = semesters.length;
+
+    if (semesterCount >= 8) {
+        // Calculate average of the "Final Semester Exam" of each of the semesters
+        let totalFinalGpa = 0;
+        let finalExamCount = 0;
+
+        Object.values(props.groupedHistory).forEach(exams => {
+            // Find the exam marked as final
+            const finalExam = exams.find(e => e.is_final);
+            if (finalExam) {
+                const val = parseFloat(finalExam.gpa);
+                if (!isNaN(val)) {
+                    totalFinalGpa += val;
+                    finalExamCount++;
+                }
+            } else {
+                // Fallback to the latest exam of the semester if no final exam exists
+                if (exams.length > 0) {
+                    const lastExam = exams[exams.length - 1];
+                    const val = parseFloat(lastExam.gpa);
+                    if (!isNaN(val)) {
+                        totalFinalGpa += val;
+                        finalExamCount++;
+                    }
+                }
             }
         });
-    });
-    return examCount > 0 ? (totalGpa / examCount).toFixed(2) : '0.00';
+
+        return finalExamCount > 0 ? (totalFinalGpa / finalExamCount).toFixed(2) : '0.00';
+    } else {
+        // Show last exam's GPA
+        const allExams = Object.values(props.groupedHistory).flat();
+        if (allExams.length === 0) return '0.00';
+
+        // Sort by ID to find the actual last exam
+        const sortedExams = [...allExams].sort((a, b) => a.id - b.id);
+        const lastExam = sortedExams[sortedExams.length - 1];
+
+        return parseFloat(lastExam.gpa).toFixed(2);
+    }
 });
 
 const cgpaGrade = computed(() => {

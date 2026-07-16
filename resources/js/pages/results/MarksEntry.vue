@@ -12,6 +12,13 @@ interface StudentRow {
     program_name: string;
     current_semester: string;
     semester_id: number | null;
+    exam_results: Array<{
+        semester_id: number;
+        semester_exam_id: number;
+        marks: Record<string, number | string>;
+        pass_status: string;
+        remarks: string | null;
+    }>;
 }
 
 interface SemesterExam {
@@ -66,6 +73,113 @@ const selectedSemesterExams = computed(() => {
     return semester ? semester.exams : [];
 });
 
+function canAddMarks(student: StudentRow): boolean {
+    const results = student.exam_results || [];
+    const currentSemesterResults = results.filter(res => res.semester_id === student.semester_id);
+
+    if (currentSemesterResults.length === 0) {
+        return true;
+    }
+
+    // Check if there is any failed subject (score < 33) in the current semester
+    const hasFail = currentSemesterResults.some(res => {
+        return Object.values(res.marks).some(score => score !== '' && Number(score) < 33);
+    });
+
+    if (hasFail) {
+        return true;
+    }
+
+    // If they haven't entered marks for all exams of the current semester, they can still add marks
+    const semester = props.semesters.find(s => s.id === student.semester_id);
+    const totalExams = semester ? semester.exams.length : 0;
+    if (currentSemesterResults.length < totalExams) {
+        return true;
+    }
+
+    return false;
+}
+
+function isSubjectDisabled(sub: string): boolean {
+    if (!activeStudent.value || !form.semester_id || !form.semester_exam_id) {
+        return false;
+    }
+    const results = activeStudent.value.exam_results || [];
+    // Find result matching the selected semester and exam
+    const examResult = results.find(res =>
+        res.semester_id === Number(form.semester_id) &&
+        res.semester_exam_id === Number(form.semester_exam_id)
+    );
+    if (!examResult) {
+        return false;
+    }
+    const score = examResult.marks[sub];
+    return score !== undefined && score !== null && score !== '' && Number(score) >= 60;
+}
+
+function getSubjectStatus(sub: string) {
+    if (!activeStudent.value || !form.semester_id || !form.semester_exam_id) {
+        return null;
+    }
+    const results = activeStudent.value.exam_results || [];
+    const examResult = results.find(res =>
+        res.semester_id === Number(form.semester_id) &&
+        res.semester_exam_id === Number(form.semester_exam_id)
+    );
+    if (!examResult) {
+        return null;
+    }
+    const score = examResult.marks[sub];
+    if (score === undefined || score === null || score === '') {
+        return null;
+    }
+
+    const numScore = Number(score);
+    if (numScore < 33) {
+        return { text: 'Failed', class: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800' };
+    } else if (numScore < 60) {
+        return { text: 'Improvement (<60)', class: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800' };
+    } else {
+        return { text: 'Passed (Locked)', class: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800' };
+    }
+}
+
+watch(() => form.semester_id, () => {
+    form.semester_exam_id = '';
+    const marksObj: Record<string, number | string> = {};
+    props.subjects.forEach(sub => {
+        marksObj[sub] = '';
+    });
+    form.marks = marksObj;
+    form.remarks = '';
+});
+
+watch(() => form.semester_exam_id, (newExamId) => {
+    const marksObj: Record<string, number | string> = {};
+    props.subjects.forEach(sub => {
+        marksObj[sub] = '';
+    });
+
+    if (activeStudent.value && newExamId && form.semester_id) {
+        const results = activeStudent.value.exam_results || [];
+        const examResult = results.find(res =>
+            res.semester_id === Number(form.semester_id) &&
+            res.semester_exam_id === Number(newExamId)
+        );
+        if (examResult) {
+            props.subjects.forEach(sub => {
+                marksObj[sub] = examResult.marks[sub] !== undefined ? examResult.marks[sub] : '';
+            });
+            form.remarks = examResult.remarks || '';
+        } else {
+            form.remarks = '';
+        }
+    } else {
+        form.remarks = '';
+    }
+    form.marks = marksObj;
+});
+
 function applyFilters() {
     router.get('/results/marks-entry', {
         program_name: selectedProgram.value,
@@ -79,7 +193,7 @@ function openAddMarks(student: StudentRow) {
     form.student_id = student.id;
     form.semester_id = student.semester_id || '';
     form.semester_exam_id = '';
-    
+
     // Initialize marks fields
     const marksObj: Record<string, number | string> = {};
     props.subjects.forEach(sub => {
@@ -87,7 +201,7 @@ function openAddMarks(student: StudentRow) {
     });
     form.marks = marksObj;
     form.remarks = '';
-    
+
     showAddMarksModal.value = true;
 }
 
@@ -177,11 +291,15 @@ const breadcrumbs = [
                                 <td class="p-4 text-center font-medium">{{ student.current_semester }}</td>
                                 <td class="p-4 text-right">
                                     <button
+                                        v-if="canAddMarks(student)"
                                         @click="openAddMarks(student)"
                                         class="inline-flex items-center justify-center rounded-lg bg-neutral-950 hover:bg-neutral-800 text-white px-3 py-1.5 text-xs font-bold transition dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
                                     >
                                         Add Marks
                                     </button>
+                                    <span v-else class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-450 select-none">
+                                        Completed
+                                    </span>
                                 </td>
                             </tr>
                             <tr v-if="students.length === 0">
@@ -204,10 +322,11 @@ const breadcrumbs = [
                 <form @submit.prevent="submitMarks" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold mb-1">Semester</label>
-                            <div class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400 select-none cursor-not-allowed font-medium">
-                                {{ activeStudent?.current_semester || 'N/A' }}
-                            </div>
+                            <label class="block text-xs font-semibold mb-1">Semester *</label>
+                            <select v-model="form.semester_id" required class="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm focus:outline-none">
+                                <option value="">Select Semester</option>
+                                <option v-for="s in semesters" :key="s.id" :value="s.id">{{ s.name }}</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1">Exam Term *</label>
@@ -223,14 +342,20 @@ const breadcrumbs = [
                         <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-wider">Subject Scores</h4>
                         <div class="grid grid-cols-2 gap-4 max-h-60 overflow-y-auto pr-1">
                             <div v-for="sub in subjects" :key="sub" class="flex items-center justify-between border border-neutral-100 dark:border-neutral-800 p-2 rounded-lg bg-neutral-50 dark:bg-neutral-950">
-                                <span class="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{{ sub }}</span>
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{{ sub }}</span>
+                                    <span v-if="getSubjectStatus(sub)" :class="['inline-self-start text-[8px] font-bold px-1 py-0.5 rounded border mt-0.5 w-max', getSubjectStatus(sub).class]">
+                                        {{ getSubjectStatus(sub).text }}
+                                    </span>
+                                </div>
                                 <input
                                     v-model.number="form.marks[sub]"
                                     type="number"
                                     min="0"
                                     max="100"
                                     placeholder="0-100"
-                                    class="w-16 text-center rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-xs font-bold"
+                                    :disabled="isSubjectDisabled(sub)"
+                                    class="w-16 text-center rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-xs font-bold disabled:bg-neutral-100 dark:disabled:bg-neutral-800 disabled:text-neutral-450 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>

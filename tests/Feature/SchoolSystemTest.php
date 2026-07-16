@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ExamResult;
 use App\Models\FeePayment;
 use App\Models\Notice;
 use App\Models\Program;
@@ -344,5 +345,50 @@ test('admin can view student academic results history page and see profile detai
         ->where('student.id', $student->id)
         ->where('student.full_name_en', 'John Doe History')
         ->where('student.student_id', 'STU-12345')
+    );
+});
+
+test('marks entry screen flags last semester students and includes existing results', function () {
+    $admin = User::factory()->create();
+
+    // Create two semesters: 1st is NOT last, 2nd is the last
+    $sem1 = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $sem2 = Semester::create(['name' => '2nd Semester', 'sort_order' => 2]);
+
+    $student = Student::factory()->create([
+        'program_name' => 'Science',
+        'section' => 'A',
+        'semester_id' => $sem2->id, // enrolled in last semester
+    ]);
+
+    $exam = SemesterExam::create([
+        'semester_id' => $sem2->id,
+        'name' => 'Final Exam',
+        'is_final' => true,
+        'sort_order' => 1,
+    ]);
+
+    // Create an exam result (Math passed 80, English failed 25)
+    $result = ExamResult::create([
+        'student_id' => $student->id,
+        'semester_id' => $sem2->id,
+        'semester_exam_id' => $exam->id,
+        'exam_name' => 'Final Exam',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'marks' => ['Mathematics' => 80, 'English' => 25],
+        'gpa' => 2.50,
+        'grade' => 'C',
+        'pass_status' => 'fail',
+    ]);
+
+    $response = $this->actingAs($admin)->get('/results/marks-entry?program_name=Science&section=A');
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('results/MarksEntry')
+        ->where('students.0.exam_results.0.semester_exam_id', $exam->id)
+        ->where('students.0.exam_results.0.marks.Mathematics', 80)
+        ->where('students.0.exam_results.0.marks.English', 25)
     );
 });
