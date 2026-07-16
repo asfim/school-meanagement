@@ -199,7 +199,10 @@ function printMarksheet() {
                 <nav class="pr-nav">
                     <Link href="/" class="pr-nav-link">Home</Link>
                     <Link href="/#notices" class="pr-nav-link">Notice Board</Link>
+                    <Link href="/#about" class="pr-nav-link">About Us</Link>
+                    <Link href="/#programs" class="pr-nav-link">Programs</Link>
                     <Link href="/result" class="pr-nav-link pr-nav-link--active">Results</Link>
+                    <Link href="/#contact" class="pr-nav-link">Contact</Link>
                     <Link
                         v-if="$page.props.auth?.user"
                         :href="route('dashboard')"

@@ -285,7 +285,8 @@ function getSubjectGrade(score: number): string {
                     </div>
                 </div>
                 <nav class="sv-nav">
-                    <a href="#notices" class="sv-nav-link sv-nav-link--active">Notice Board</a>
+                    <a href="#" class="sv-nav-link sv-nav-link--active">Home</a>
+                    <a href="#notices" class="sv-nav-link">Notice Board</a>
                     <a href="#about" class="sv-nav-link">About Us</a>
                     <a href="#programs" class="sv-nav-link">Programs</a>
                     <Link href="/result" class="sv-nav-link">Results</Link>
@@ -623,7 +624,6 @@ function getSubjectGrade(score: number): string {
                     <div class="sv-eyebrow sv-eyebrow--dark">About Us</div>
                     <h2>40 Years of Education, Discipline &amp; Values</h2>
                     <p>Since 1986, Saraswati Vidyaniketan has been shaping the future of thousands of students in Dhaka. We believe true education means nurturing the hidden potential within every child with the right care and guidance.</p>
-                    <a href="#contact" class="sv-text-link">Learn more →</a>
                 </div>
                 <div class="sv-stat-grid">
                     <div class="sv-stat-box"><div class="sv-stat-num">1850+</div><div class="sv-stat-label">Students</div></div>
