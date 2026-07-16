@@ -14,6 +14,10 @@ class SiteSetting extends Model
         'about_title',
         'about_description',
         'about_stats',
+        'contact_address',
+        'contact_phone',
+        'contact_email',
+        'contact_hours',
     ];
 
     protected function casts(): array

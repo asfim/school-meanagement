@@ -60,6 +60,10 @@ class HandleInertiaRequests extends Middleware
                 'about_title' => null,
                 'about_description' => null,
                 'about_stats' => null,
+                'contact_address' => null,
+                'contact_phone' => null,
+                'contact_email' => null,
+                'contact_hours' => null,
             ],
         ]);
     }

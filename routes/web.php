@@ -3,6 +3,7 @@
 use App\Http\Controllers\AboutUsController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CampusLifeController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FeeController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\ProgramController;
@@ -115,6 +116,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // About Us Page Management
     Route::get('about-us', [AboutUsController::class, 'edit'])->name('about-us.edit');
     Route::post('about-us', [AboutUsController::class, 'update'])->name('about-us.update');
+
+    // Contact Us Page Management
+    Route::get('contact-us', [ContactController::class, 'edit'])->name('contact-us.edit');
+    Route::post('contact-us', [ContactController::class, 'update'])->name('contact-us.update');
 });
 
 require __DIR__.'/settings.php';

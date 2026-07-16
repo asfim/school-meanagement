@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, UserCheck, GraduationCap, CreditCard, Megaphone, PenTool, Settings, Image, Sparkles, School, Info } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCheck, GraduationCap, CreditCard, Megaphone, PenTool, Settings, Image, Sparkles, School, Info, PhoneCall } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -73,6 +73,11 @@ const mainNavItems: NavItem[] = [
         title: 'About Us',
         href: '/about-us',
         icon: Info,
+    },
+    {
+        title: 'Contact Us',
+        href: '/contact-us',
+        icon: PhoneCall,
     },
     {
         title: 'Settings',

@@ -11,6 +11,10 @@ const siteSettings = computed(() => page.props.site_settings as {
     about_title: string | null;
     about_description: string | null;
     about_stats: Array<{ label: string; value: string }> | null;
+    contact_address: string | null;
+    contact_phone: string | null;
+    contact_email: string | null;
+    contact_hours: string | null;
 });
 import FlashToast from '@/components/FlashToast.vue';
 
@@ -537,14 +541,13 @@ function getSubjectGrade(score: number): string {
                 <div>
                     <div class="sv-eyebrow">Contact</div>
                     <h2>Stay Connected With Us</h2>
-                    <p class="sv-contact-line">📍 124, Mirpur Road, Dhaka — 1207</p>
-                    <p class="sv-contact-line">📞 02-9876543</p>
-                    <p class="sv-contact-line">✉️ info@saraswatividya.edu.bd</p>
+                    <p class="sv-contact-line">📍 {{ siteSettings.contact_address || '124, Mirpur Road, Dhaka — 1207' }}</p>
+                    <p class="sv-contact-line">📞 {{ siteSettings.contact_phone || '02-9876543' }}</p>
+                    <p class="sv-contact-line">✉️ {{ siteSettings.contact_email || 'info@saraswatividya.edu.bd' }}</p>
                 </div>
                 <div>
                     <h3 class="sv-hours-title">Office Hours</h3>
-                    <p class="sv-contact-line">Sat — Thu : 8:00 AM — 4:00 PM</p>
-                    <p class="sv-contact-line">Friday : Closed</p>
+                    <p class="sv-contact-line" style="white-space: pre-line;">{{ siteSettings.contact_hours || "Sat — Thu : 8:00 AM — 4:00 PM\nFriday : Closed" }}</p>
                 </div>
             </div>
         </section>
