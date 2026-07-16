@@ -489,3 +489,100 @@ test('admin can view results tabulation index page and see computed CGPA', funct
         ->where('reportCard.data.0.grade', 'A+')
     );
 });
+
+test('guest can query student academic results via public result page', function () {
+    $semester = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $exam = SemesterExam::create([
+        'semester_id' => $semester->id,
+        'name' => '1st Term',
+        'is_final' => false,
+        'sort_order' => 1,
+    ]);
+    $student = Student::factory()->create([
+        'full_name_en' => 'Jane Public Result',
+        'student_id' => 'STU-PUB-1',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'roll_number' => 12,
+        'semester_id' => $semester->id,
+    ]);
+
+    ExamResult::create([
+        'student_id' => $student->id,
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'exam_name' => '1st Term',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'marks' => ['Mathematics' => 90, 'English' => 90],
+        'gpa' => 5.00,
+        'grade' => 'A+',
+        'pass_status' => 'pass',
+    ]);
+
+    // Query result without section (should match)
+    $response = $this->get('/result?student_id=STU-PUB-1&semester_id='.$semester->id.'&semester_exam_id='.$exam->id);
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('PublicResult')
+        ->where('resultData.student.student_id', 'STU-PUB-1')
+        ->where('resultData.result.grade', 'A+')
+    );
+
+    // Query result with matching section (should match)
+    $response = $this->get('/result?student_id=STU-PUB-1&semester_id='.$semester->id.'&semester_exam_id='.$exam->id.'&section=A');
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('PublicResult')
+        ->where('resultData.student.student_id', 'STU-PUB-1')
+    );
+
+    // Query result with wrong section (should not match)
+    $response = $this->get('/result?student_id=STU-PUB-1&semester_id='.$semester->id.'&semester_exam_id='.$exam->id.'&section=B');
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('PublicResult')
+        ->where('resultData', null)
+        ->where('resultError', 'No result found for the specified filters. Please check and try again.')
+    );
+});
+
+test('guest can query complete academic transcript combining all semesters', function () {
+    $semester = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $exam = SemesterExam::create([
+        'semester_id' => $semester->id,
+        'name' => '1st Term',
+        'is_final' => false,
+        'sort_order' => 1,
+    ]);
+    $student = Student::factory()->create([
+        'full_name_en' => 'Jane Transcript Result',
+        'student_id' => 'STU-PUB-TR1',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'roll_number' => 12,
+        'semester_id' => $semester->id,
+    ]);
+
+    ExamResult::create([
+        'student_id' => $student->id,
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'exam_name' => '1st Term',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'marks' => ['Mathematics' => 90, 'English' => 90],
+        'gpa' => 5.00,
+        'grade' => 'A+',
+        'pass_status' => 'pass',
+    ]);
+
+    // Query transcript
+    $response = $this->get('/result?student_id=STU-PUB-TR1&lookup_type=transcript');
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('PublicResult')
+        ->where('transcriptData.student.student_id', 'STU-PUB-TR1')
+        ->where('transcriptData.groupedHistory.1st Semester.0.grade', 'A+')
+    );
+});

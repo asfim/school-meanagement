@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const page = usePage();
 const siteSettings = computed(() => page.props.site_settings as {
@@ -16,6 +16,7 @@ interface Student {
     class: string;
     section: string;
     roll_number: number;
+    program_name: string;
 }
 
 interface ExamResult {
@@ -27,18 +28,120 @@ interface ExamResult {
     remarks: string | null;
 }
 
+interface ResultHistoryItem {
+    id: number;
+    exam_name: string;
+    semester_name: string;
+    semester_id: number;
+    marks: Record<string, number>;
+    total_marks: number;
+    percentage: number;
+    gpa: string;
+    grade: string;
+    pass_status: 'pass' | 'fail';
+    is_final: boolean;
+    date: string;
+}
+
+interface SemesterExam {
+    id: number;
+    name: string;
+    is_final: boolean;
+    sort_order: number;
+}
+
+interface Semester {
+    id: number;
+    name: string;
+    sort_order: number;
+    exams: SemesterExam[];
+}
+
 const props = defineProps<{
+    semesters: Semester[];
+    sections: string[];
     resultData: { student: Student; result: ExamResult } | null;
+    transcriptData: { student: Student; groupedHistory: Record<string, ResultHistoryItem[]> } | null;
     resultError: string | null;
     filters: {
         student_id?: string;
-        exam_name?: string;
+        semester_id?: string;
+        semester_exam_id?: string;
+        section?: string;
+        lookup_type?: 'single' | 'transcript';
     };
 }>();
 
+const selectedSemesterId = ref<string>(props.filters.semester_id || '');
+const filteredExams = computed(() => {
+    const sem = props.semesters.find(s => s.id === Number(selectedSemesterId.value));
+    return sem ? sem.exams : [];
+});
+
 const form = useForm({
     student_id: props.filters.student_id || '',
-    exam_name: props.filters.exam_name || 'First Term Exam',
+    semester_id: props.filters.semester_id || '',
+    semester_exam_id: props.filters.semester_exam_id || '',
+    section: props.filters.section || '',
+    lookup_type: props.filters.lookup_type || 'single',
+});
+
+function onSemesterChange() {
+    selectedSemesterId.value = form.semester_id;
+    form.semester_exam_id = '';
+}
+
+// Compute CGPA and final grade across semesters for the transcript
+const cgpa = computed(() => {
+    if (!props.transcriptData) return '0.00';
+    const semesters = Object.keys(props.transcriptData.groupedHistory);
+    const semesterCount = semesters.length;
+
+    if (semesterCount >= 8) {
+        let totalFinalGpa = 0;
+        let finalExamCount = 0;
+
+        Object.values(props.transcriptData.groupedHistory).forEach(exams => {
+            const finalExam = exams.find(e => e.is_final);
+            if (finalExam) {
+                const val = parseFloat(finalExam.gpa);
+                if (!isNaN(val)) {
+                    totalFinalGpa += val;
+                    finalExamCount++;
+                }
+            } else {
+                if (exams.length > 0) {
+                    const lastExam = exams[exams.length - 1];
+                    const val = parseFloat(lastExam.gpa);
+                    if (!isNaN(val)) {
+                        totalFinalGpa += val;
+                        finalExamCount++;
+                    }
+                }
+            }
+        });
+
+        return finalExamCount > 0 ? (totalFinalGpa / finalExamCount).toFixed(2) : '0.00';
+    } else {
+        const allExams = Object.values(props.transcriptData.groupedHistory).flat();
+        if (allExams.length === 0) return '0.00';
+
+        const sortedExams = [...allExams].sort((a, b) => a.id - b.id);
+        const lastExam = sortedExams[sortedExams.length - 1];
+
+        return parseFloat(lastExam.gpa).toFixed(2);
+    }
+});
+
+const cgpaGrade = computed(() => {
+    const score = parseFloat(cgpa.value);
+    if (isNaN(score) || score <= 0) return 'N/A';
+    if (score >= 4.0) return 'A+';
+    if (score >= 3.5) return 'A';
+    if (score >= 3.0) return 'B';
+    if (score >= 2.5) return 'C';
+    if (score >= 2.0) return 'D';
+    return 'F';
 });
 
 function submit() {
@@ -46,22 +149,20 @@ function submit() {
 }
 
 function getSubjectGp(score: number): number {
-    if (score >= 80) return 5.0;
-    if (score >= 70) return 4.0;
-    if (score >= 60) return 3.5;
-    if (score >= 50) return 3.0;
+    if (score >= 80) return 4.0;
+    if (score >= 70) return 3.5;
+    if (score >= 60) return 3.0;
+    if (score >= 50) return 2.5;
     if (score >= 40) return 2.0;
-    if (score >= 33) return 1.0;
     return 0.0;
 }
 
 function getSubjectGrade(score: number): string {
     if (score >= 80) return 'A+';
     if (score >= 70) return 'A';
-    if (score >= 60) return 'A-';
-    if (score >= 50) return 'B';
-    if (score >= 40) return 'C';
-    if (score >= 33) return 'D';
+    if (score >= 60) return 'B';
+    if (score >= 50) return 'C';
+    if (score >= 40) return 'D';
     return 'F';
 }
 
@@ -133,6 +234,26 @@ function printMarksheet() {
                         <h2>Result Lookup</h2>
                     </div>
 
+                    <!-- Search Type Tabs -->
+                    <div class="pr-tabs" style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--line, #e5e5e5)">
+                        <button 
+                            type="button" 
+                            @click="form.lookup_type = 'single'"
+                            :class="['pr-tab-btn', { 'pr-tab-btn--active': form.lookup_type === 'single' }]"
+                            style="flex:1;padding:10px 12px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;text-align:center"
+                        >
+                            Single Exam
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="form.lookup_type = 'transcript'"
+                            :class="['pr-tab-btn', { 'pr-tab-btn--active': form.lookup_type === 'transcript' }]"
+                            style="flex:1;padding:10px 12px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;text-align:center"
+                        >
+                            All Semesters
+                        </button>
+                    </div>
+
                     <form @submit.prevent="submit" class="pr-form">
                         <div class="pr-field">
                             <label class="pr-label">Student ID</label>
@@ -146,18 +267,39 @@ function printMarksheet() {
                             <span class="pr-hint">Your student ID card number</span>
                         </div>
 
-                        <div class="pr-field">
+                        <div v-if="form.lookup_type === 'single'" class="pr-field">
+                            <label class="pr-label">Select Semester</label>
+                            <select v-model="form.semester_id" @change="onSemesterChange" class="pr-input pr-select" required>
+                                <option value="">-- Choose Semester --</option>
+                                <option v-for="sem in semesters" :key="sem.id" :value="sem.id">
+                                    {{ sem.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div v-if="form.lookup_type === 'single'" class="pr-field">
                             <label class="pr-label">Select Exam</label>
-                            <select v-model="form.exam_name" class="pr-input pr-select">
-                                <option value="First Term Exam">First Term Exam</option>
-                                <option value="Midterm Exam">Midterm Exam</option>
-                                <option value="Annual Exam">Annual Exam</option>
+                            <select v-model="form.semester_exam_id" class="pr-input pr-select" :disabled="!form.semester_id" required>
+                                <option value="">-- Choose Exam --</option>
+                                <option v-for="exam in filteredExams" :key="exam.id" :value="exam.id">
+                                    {{ exam.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div v-if="form.lookup_type === 'single'" class="pr-field">
+                            <label class="pr-label">Select Section (Optional)</label>
+                            <select v-model="form.section" class="pr-input pr-select">
+                                <option value="">All Sections</option>
+                                <option v-for="sec in sections" :key="sec" :value="sec">
+                                    Section {{ sec }}
+                                </option>
                             </select>
                         </div>
 
                         <button
                             type="submit"
-                            :disabled="form.processing || !form.student_id.trim()"
+                            :disabled="form.processing || !form.student_id.trim() || (form.lookup_type === 'single' && !form.semester_exam_id)"
                             class="pr-submit-btn"
                         >
                             <span v-if="form.processing">Searching...</span>
@@ -181,10 +323,105 @@ function printMarksheet() {
                 <!-- Result Display -->
                 <div class="pr-result-area">
                     <!-- Empty state -->
-                    <div v-if="!resultData && !resultError" class="pr-empty">
+                    <div v-if="!resultData && !transcriptData && !resultError" class="pr-empty">
                         <div class="pr-empty-icon">🎓</div>
                         <h3>No result loaded yet</h3>
-                        <p>Enter your Student ID and select the exam on the left to view your mark sheet.</p>
+                        <p>Enter your Student ID and select the query mode on the left to view your result details.</p>
+                    </div>
+
+                    <!-- Complete Academic Transcript -->
+                    <div v-if="transcriptData" class="pr-marksheet-wrap">
+                        <div class="pr-marksheet-actions">
+                            <button @click="printMarksheet" class="pr-print-btn">🖨 Print Transcript</button>
+                        </div>
+
+                        <div id="printable-marksheet" class="pr-marksheet animate-in fade-in duration-200">
+                            <!-- School Header -->
+                            <div class="pr-ms-header" style="background:#14213d;color:#fff;padding:24px 28px;display:flex;align-items:center;gap:18px">
+                                <img v-if="siteSettings.logo_path" :src="'/storage/' + siteSettings.logo_path" class="w-12 h-12 object-contain rounded-md mr-3" alt="Logo" />
+                                <div v-else class="pr-ms-crest">SV</div>
+                                <div>
+                                    <h2 style="font-size:20px;font-weight:700;margin:0 0 4px">{{ siteSettings.institute_name }}</h2>
+                                    <p style="font-size:11px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1.5px;margin:0">Official Academic Transcript</p>
+                                </div>
+                            </div>
+
+                            <!-- CGPA Summary Banner -->
+                            <div class="pr-ms-status-bar" style="background:#eef2ff;color:#4f46e5;border-bottom:1px solid rgba(79,70,229,0.1);display:flex;align-items:center;justify-content:between;padding:12px 28px;font-size:14px;font-weight:600">
+                                <span>Academic Status: ACTIVE</span>
+                                <span class="pr-ms-status-badge">CGPA: {{ cgpa }} (Grade: {{ cgpaGrade }})</span>
+                            </div>
+
+                            <!-- Student Info -->
+                            <div class="pr-ms-bio" style="padding:20px 28px;border-bottom:1px solid var(--line)">
+                                <div class="pr-ms-bio-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                                    <div class="pr-ms-bio-item">
+                                        <span class="pr-ms-bio-label" style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--soft);font-weight:600">Student Name</span>
+                                        <span class="pr-ms-bio-value" style="font-size:15px;font-weight:700;color:var(--ink)">{{ transcriptData.student.full_name_en }}</span>
+                                    </div>
+                                    <div class="pr-ms-bio-item">
+                                        <span class="pr-ms-bio-label" style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--soft);font-weight:600">Student ID</span>
+                                        <span class="pr-ms-bio-value pr-mono" style="font-size:15px;font-weight:700;color:var(--ink)">{{ transcriptData.student.student_id }}</span>
+                                    </div>
+                                    <div class="pr-ms-bio-item">
+                                        <span class="pr-ms-bio-label" style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--soft);font-weight:600">Program & Section</span>
+                                        <span class="pr-ms-bio-value" style="font-size:15px;font-weight:700;color:var(--ink)">{{ transcriptData.student.program_name }} — {{ transcriptData.student.section }}</span>
+                                    </div>
+                                    <div class="pr-ms-bio-item">
+                                        <span class="pr-ms-bio-label" style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--soft);font-weight:600">Roll Number</span>
+                                        <span class="pr-ms-bio-value" style="font-size:15px;font-weight:700;color:var(--ink)">{{ transcriptData.student.roll_number }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Semester Wise Breakdown -->
+                            <div class="pr-transcript-semesters" style="padding: 20px 28px; display:flex; flex-direction:column; gap: 24px;">
+                                <div v-for="(exams, semesterName) in transcriptData.groupedHistory" :key="semesterName" class="pr-transcript-sem" style="border:1.5px solid var(--line);border-radius:12px;overflow:hidden">
+                                    <div style="background:#f8fafc;padding:12px 16px;font-weight:800;font-size:13.5px;color:var(--ink);border-bottom:1.5px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+                                        <span>{{ semesterName }}</span>
+                                    </div>
+
+                                    <div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+                                        <div v-for="exam in exams" :key="exam.id" style="border:1px dashed var(--line);border-radius:8px;padding:12px">
+                                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                                                <span style="font-weight:700;font-size:13px;color:var(--ink)">{{ exam.exam_name }}</span>
+                                                <div style="display:flex;gap:8px;align-items:center">
+                                                    <span :class="exam.pass_status === 'pass' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'" style="font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid">
+                                                        {{ exam.pass_status === 'pass' ? 'PASSED' : 'FAILED' }}
+                                                    </span>
+                                                    <span style="font-size:11px;font-weight:800;color:var(--ink);font-family:'IBM Plex Mono',monospace">
+                                                        GPA: {{ exam.gpa }} ({{ exam.grade }})
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <table style="width:100%;font-size:11.5px;border-collapse:collapse">
+                                                <thead>
+                                                    <tr style="border-bottom:1px solid var(--line);color:var(--soft);text-align:left;font-weight:700">
+                                                        <th style="padding:4px 0">Subject</th>
+                                                        <th style="padding:4px 0;text-align:center">Score</th>
+                                                        <th style="padding:4px 0;text-align:center">Grade Point</th>
+                                                        <th style="padding:4px 0;text-align:center">Grade</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="(score, subject) in exam.marks" :key="subject" style="border-bottom:1px dashed rgba(0,0,0,0.04)" :class="{ 'bg-red-50/20': score < 40 }">
+                                                        <td style="padding:4px 0;font-weight:600">{{ subject }}</td>
+                                                        <td style="padding:4px 0;text-align:center;font-weight:700">{{ score }}</td>
+                                                        <td style="padding:4px 0;text-align:center;font-family:'IBM Plex Mono',monospace">{{ getSubjectGp(score).toFixed(2) }}</td>
+                                                        <td style="padding:4px 0;text-align:center;font-weight:800" :class="score >= 40 ? 'text-green-600' : 'text-red-500'">{{ getSubjectGrade(score) }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pr-ms-official">
+                                Transmitted from official database records · {{ new Date().toLocaleString() }}
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Mark Sheet -->
@@ -252,12 +489,12 @@ function printMarksheet() {
                                     <tr
                                         v-for="(score, subject) in resultData.result.marks"
                                         :key="subject"
-                                        :class="{ 'pr-ms-table-fail': score < 33 }"
+                                        :class="{ 'pr-ms-table-fail': score < 40 }"
                                     >
                                         <td class="pr-ms-subject">{{ subject }}</td>
                                         <td class="pr-ms-center pr-ms-score">{{ score }}</td>
                                         <td class="pr-ms-center pr-mono">{{ getSubjectGp(score).toFixed(2) }}</td>
-                                        <td class="pr-ms-center pr-ms-grade" :class="{ 'pr-ms-grade--fail': score < 33 }">
+                                        <td class="pr-ms-center pr-ms-grade" :class="{ 'pr-ms-grade--fail': score < 40 }">
                                             {{ getSubjectGrade(score) }}
                                         </td>
                                     </tr>
@@ -399,6 +636,17 @@ a { color: inherit; text-decoration: none; }
     border-radius: 16px; padding: 28px;
     box-shadow: 0 12px 28px -16px rgba(20,33,61,0.32);
     position: sticky; top: 80px;
+}
+.pr-tab-btn {
+    color: var(--soft);
+    transition: color 0.2s, border-color 0.2s;
+}
+.pr-tab-btn:hover {
+    color: var(--ink);
+}
+.pr-tab-btn--active {
+    color: var(--forest) !important;
+    border-bottom: 2px solid var(--forest) !important;
 }
 .pr-panel-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
 .pr-panel-icon { font-size: 26px; }
