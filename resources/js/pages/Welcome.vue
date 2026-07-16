@@ -581,7 +581,7 @@ function getSubjectGrade(score: number): string {
                         v-for="(item, i) in campusLifeItems"
                         :key="item.id"
                         class="sv-gtile"
-                        :class="['sv-g' + (i + 1), { 'sv-has-image': item.image_path }]"
+                        :class="['sv-g' + ((i % 4) + 1), { 'sv-has-image': item.image_path }]"
                         :style="item.image_path
                             ? { backgroundImage: `url('/storage/${item.image_path}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
                             : {}"
@@ -1166,10 +1166,11 @@ a { color: inherit; text-decoration: none; }
 .sv-gallery-grid {
     display: grid;
     grid-template-columns: 1.4fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 14px; height: 380px;
+    grid-auto-rows: 183px;
+    gap: 14px;
+    min-height: 380px;
 }
-@media (max-width: 760px) { .sv-gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 160px); height: auto; } }
+@media (max-width: 760px) { .sv-gallery-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 160px; height: auto; } }
 .sv-gtile {
     border-radius: 12px; position: relative; overflow: hidden;
     display: flex; align-items: flex-end; padding: 16px;
@@ -1182,7 +1183,7 @@ a { color: inherit; text-decoration: none; }
 /* Tiles with a real image: light black overlay, no gradient/hover */
 .sv-gtile.sv-has-image::before { background: rgba(0,0,0,0.28); opacity: 1; }
 .sv-gtile.sv-has-image:hover::before { opacity: 1; }
-.sv-g1 { grid-row: 1/3; }
+.sv-g1 { grid-row: span 2; }
 .sv-g1::before { background: linear-gradient(160deg, #2c5f47, #173A2C); }
 .sv-g2::before { background: linear-gradient(160deg, #3B5FA0, #1F3A63); }
 .sv-g3::before { background: linear-gradient(160deg, #A87F2B, #7A5A1D); }

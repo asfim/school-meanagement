@@ -46,14 +46,14 @@ class CampusLifeController extends Controller
             ->with('success', 'Gallery item created successfully.');
     }
 
-    public function edit(CampusLifeItem $item): Response
+    public function edit(CampusLifeItem $campusLife): Response
     {
         return Inertia::render('campus-life/CreateEdit', [
-            'item' => $item,
+            'item' => $campusLife,
         ]);
     }
 
-    public function update(Request $request, CampusLifeItem $item): RedirectResponse
+    public function update(Request $request, CampusLifeItem $campusLife): RedirectResponse
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -64,32 +64,32 @@ class CampusLifeController extends Controller
             'remove_image' => ['boolean'],
         ]);
 
-        if (! empty($validated['remove_image']) && $item->image_path) {
-            Storage::disk('public')->delete($item->image_path);
+        if (! empty($validated['remove_image']) && $campusLife->image_path) {
+            Storage::disk('public')->delete($campusLife->image_path);
             $validated['image_path'] = null;
         }
 
         if ($request->hasFile('image')) {
-            if ($item->image_path) {
-                Storage::disk('public')->delete($item->image_path);
+            if ($campusLife->image_path) {
+                Storage::disk('public')->delete($campusLife->image_path);
             }
             $validated['image_path'] = $request->file('image')->store('campus-life', 'public');
         }
 
         unset($validated['image'], $validated['remove_image']);
-        $item->update($validated);
+        $campusLife->update($validated);
 
         return redirect()->route('campus-life.index')
             ->with('success', 'Gallery item updated successfully.');
     }
 
-    public function destroy(CampusLifeItem $item): RedirectResponse
+    public function destroy(CampusLifeItem $campusLife): RedirectResponse
     {
-        if ($item->image_path) {
-            Storage::disk('public')->delete($item->image_path);
+        if ($campusLife->image_path) {
+            Storage::disk('public')->delete($campusLife->image_path);
         }
 
-        $item->delete();
+        $campusLife->delete();
 
         return redirect()->route('campus-life.index')
             ->with('success', 'Gallery item deleted.');
