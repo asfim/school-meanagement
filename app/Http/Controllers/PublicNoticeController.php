@@ -7,6 +7,7 @@ use App\Models\CampusLifeItem;
 use App\Models\ExamResult;
 use App\Models\FeePayment;
 use App\Models\Notice;
+use App\Models\Program;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,6 +36,9 @@ class PublicNoticeController extends Controller
             })
             ->orderBy('publish_date', 'desc')
             ->get();
+
+        // Get programs with subjects
+        $programs = Program::with('subjects')->orderBy('name')->get();
 
         // 2. Handle Result Query
         $resultData = null;
@@ -88,6 +92,7 @@ class PublicNoticeController extends Controller
             'notices' => $notices,
             'banners' => $banners,
             'campusLifeItems' => $campusLifeItems,
+            'programs' => $programs,
             'resultData' => $resultData,
             'resultError' => $resultError,
             'feeData' => $feeData,

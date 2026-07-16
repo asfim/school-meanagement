@@ -74,10 +74,26 @@ interface CampusLifeItem {
     is_active: boolean;
 }
 
+interface Subject {
+    id: number;
+    name: string;
+    code: string;
+}
+
+interface ProgramItem {
+    id: number;
+    name: string;
+    code: string | null;
+    description: string | null;
+    duration_years: number | null;
+    subjects: Subject[];
+}
+
 const props = defineProps<{
     banners: Banner[];
     notices: Notice[];
     campusLifeItems: CampusLifeItem[];
+    programs: ProgramItem[];
     resultData: { student: Student; result: ExamResult } | null;
     resultError: string | null;
     feeData: { student: Student; payments: FeePayment[] } | null;
@@ -88,6 +104,11 @@ const props = defineProps<{
         fee_student_id?: string;
     };
 }>();
+
+const expandedProgramId = ref<number | null>(null);
+function toggleProgram(id: number) {
+    expandedProgramId.value = expandedProgramId.value === id ? null : id;
+}
 
 // ── Banner slider ──────────────────────────────────────────────────────────
 const sliderIndex = ref(0);
@@ -618,28 +639,38 @@ function getSubjectGrade(score: number): string {
             <div class="sv-programs-inner">
                 <div class="sv-section-label">
                     <h2>Academic Programs</h2>
-                    <span>From Play to Class Twelve</span>
+                    <span>Click a program to view its subjects</span>
                 </div>
-                <div class="sv-program-grid">
-                    <div class="sv-program-card">
-                        <div class="sv-program-tag">Pre-Primary</div>
-                        <h3>Play — Nursery</h3>
-                        <p>Learning through play, building foundations in language and numeracy.</p>
-                    </div>
-                    <div class="sv-program-card">
-                        <div class="sv-program-tag">Primary</div>
-                        <h3>Class 1 — 5</h3>
-                        <p>Building a strong foundation in Bangla, English, Math, and Science.</p>
-                    </div>
-                    <div class="sv-program-card">
-                        <div class="sv-program-tag">Secondary</div>
-                        <h3>Class 6 — 10</h3>
-                        <p>Building expertise across Science, Business Studies, and Humanities.</p>
-                    </div>
-                    <div class="sv-program-card">
-                        <div class="sv-program-tag">Higher Secondary</div>
-                        <h3>Class 11 — 12</h3>
-                        <p>Focused preparation for higher education and future careers.</p>
+                <div v-if="programs.length === 0" class="sv-empty-state" style="grid-column:1/-1">
+                    No academic programs have been added yet. Admin can add them from the dashboard.
+                </div>
+                <div v-else class="sv-program-grid">
+                    <div
+                        v-for="prog in programs"
+                        :key="prog.id"
+                        class="sv-program-card"
+                        :class="{ 'sv-program-card--expanded': expandedProgramId === prog.id }"
+                        @click="toggleProgram(prog.id)"
+                        style="cursor:pointer"
+                    >
+                        <div class="sv-program-tag">{{ prog.code || 'PROG' }}</div>
+                        <h3>{{ prog.name }}</h3>
+                        <p v-if="prog.description">{{ prog.description }}</p>
+                        <p v-if="prog.duration_years" style="font-size:12px;opacity:.6;margin-top:4px">Duration: {{ prog.duration_years }} year{{ prog.duration_years > 1 ? 's' : '' }}</p>
+
+                        <!-- Subjects Dropdown -->
+                        <div v-if="expandedProgramId === prog.id && prog.subjects.length > 0" class="sv-subject-list" @click.stop>
+                            <div class="sv-subject-list-title">Subjects ({{ prog.subjects.length }})</div>
+                            <ul>
+                                <li v-for="sub in prog.subjects" :key="sub.id">
+                                    <span class="sv-subject-code">{{ sub.code }}</span>
+                                    <span>{{ sub.name }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div v-else-if="expandedProgramId === prog.id && prog.subjects.length === 0" class="sv-subject-list" @click.stop>
+                            <div style="text-align:center;padding:8px;font-size:12px;color:rgba(255,255,255,.5)">No subjects configured yet.</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1107,6 +1138,28 @@ a { color: inherit; text-decoration: none; }
 }
 .sv-program-card h3 { font-size: 16px; font-weight: 600; margin: 0 0 8px; color: var(--sv-ink); }
 .sv-program-card p { font-size: 13px; line-height: 1.65; color: var(--sv-text-soft); margin: 0; }
+.sv-program-card--expanded { border-color: var(--sv-brass); background: rgba(31,77,58,0.04); }
+.sv-subject-list {
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sv-line);
+    animation: svSubjectSlide .25s ease-out;
+}
+@keyframes svSubjectSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.sv-subject-list-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--sv-forest); margin-bottom: 8px;
+}
+.sv-subject-list ul { list-style: none; margin: 0; padding: 0; }
+.sv-subject-list li {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0; font-size: 13px; color: var(--sv-ink);
+    border-bottom: 1px dashed rgba(0,0,0,.06);
+}
+.sv-subject-list li:last-child { border-bottom: none; }
+.sv-subject-code {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;
+    background: rgba(31,77,58,0.08); color: var(--sv-forest);
+    padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+}
 
 /* ── Gallery ──────────────────────────────────────────────────────────────── */
 .sv-gallery { padding: 0 24px 72px; position: relative; z-index: 1; }
