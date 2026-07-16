@@ -33,6 +33,8 @@ class ExamResult extends Model
         'pass_status',
         'merit_position',
         'remarks',
+        'semester_id',
+        'semester_exam_id',
     ];
 
     /**
@@ -46,6 +48,8 @@ class ExamResult extends Model
             'marks' => 'array',
             'gpa' => 'decimal:2',
             'merit_position' => 'integer',
+            'semester_id' => 'integer',
+            'semester_exam_id' => 'integer',
         ];
     }
 
@@ -57,5 +61,21 @@ class ExamResult extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    /**
+     * Get the semester associated with the exam result.
+     */
+    public function semester(): BelongsTo
+    {
+        return $this->belongsTo(Semester::class);
+    }
+
+    /**
+     * Get the semester exam associated with the exam result.
+     */
+    public function semesterExam(): BelongsTo
+    {
+        return $this->belongsTo(SemesterExam::class);
     }
 }

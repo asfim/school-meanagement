@@ -7,6 +7,8 @@ use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\PublicNoticeController;
 use App\Http\Controllers\ResultController;
+use App\Http\Controllers\SemesterController;
+use App\Http\Controllers\SemesterExamController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
@@ -34,7 +36,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('results/marks-entry', [ResultController::class, 'marksEntry'])->name('results.marks-entry');
     Route::post('results/marks-entry', [ResultController::class, 'saveMarks'])->name('results.save-marks');
     Route::get('results/{result}/print', [ResultController::class, 'print'])->name('results.print');
-    Route::resource('results', ResultController::class)->only(['index']);
+    Route::resource('results', ResultController::class)->only(['index', 'show']);
+
+    // Semesters & Exams CRUD
+    Route::resource('semesters', SemesterController::class);
+    Route::post('semesters/{semester}/exams', [SemesterExamController::class, 'store'])->name('semesters.exams.store');
+    Route::put('semester-exams/{semesterExam}', [SemesterExamController::class, 'update'])->name('semester-exams.update');
+    Route::delete('semester-exams/{semesterExam}', [SemesterExamController::class, 'destroy'])->name('semester-exams.destroy');
 
     // Fees
     Route::get('fees/billing', [FeeController::class, 'billing'])->name('fees.billing');

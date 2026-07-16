@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Student extends Model
 {
@@ -35,6 +37,7 @@ class Student extends Model
         'photo_path',
         'emergency_contact',
         'status',
+        'semester_id',
     ];
 
     /**
@@ -48,6 +51,7 @@ class Student extends Model
             'dob' => 'date',
             'admission_date' => 'date',
             'tuition_fee' => 'decimal:2',
+            'semester_id' => 'integer',
         ];
     }
 
@@ -69,5 +73,21 @@ class Student extends Model
     public function feePayments(): HasMany
     {
         return $this->hasMany(FeePayment::class);
+    }
+
+    /**
+     * Get the student's current semester.
+     */
+    public function semester(): BelongsTo
+    {
+        return $this->belongsTo(Semester::class);
+    }
+
+    /**
+     * Get the student's latest exam result.
+     */
+    public function latestResult(): HasOne
+    {
+        return $this->hasOne(ExamResult::class)->latestOfMany();
     }
 }

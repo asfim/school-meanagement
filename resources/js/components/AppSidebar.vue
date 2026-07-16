@@ -35,6 +35,11 @@ const mainNavItems: NavItem[] = [
         icon: BookOpen,
     },
     {
+        title: 'Semesters & Exams',
+        href: '/semesters',
+        icon: Settings,
+    },
+    {
         title: 'Academic Results',
         href: '/results',
         icon: GraduationCap,

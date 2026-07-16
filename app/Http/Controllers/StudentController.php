@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Program;
+use App\Models\Semester;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,10 +59,12 @@ class StudentController extends Controller
     public function create(): Response
     {
         $programs = Program::orderBy('name')->get();
+        $semesters = Semester::orderBy('sort_order')->get();
 
         return Inertia::render('students/CreateEdit', [
             'student' => null,
             'programs' => $programs,
+            'semesters' => $semesters,
         ]);
     }
 
@@ -80,6 +83,7 @@ class StudentController extends Controller
             'permanent_address' => 'required|string',
             'current_address' => 'required|string',
             'tuition_fee' => 'required|numeric|min:0',
+            'semester_id' => 'required|exists:semesters,id',
             'program_name' => 'required|string|max:255',
             'section' => 'required|string',
             'roll_number' => 'required|integer|min:1',
@@ -131,10 +135,12 @@ class StudentController extends Controller
     public function edit(Student $student): Response
     {
         $programs = Program::orderBy('name')->get();
+        $semesters = Semester::orderBy('sort_order')->get();
 
         return Inertia::render('students/CreateEdit', [
             'student' => $student,
             'programs' => $programs,
+            'semesters' => $semesters,
         ]);
     }
 
@@ -153,6 +159,7 @@ class StudentController extends Controller
             'permanent_address' => 'required|string',
             'current_address' => 'required|string',
             'tuition_fee' => 'required|numeric|min:0',
+            'semester_id' => 'required|exists:semesters,id',
             'program_name' => 'required|string|max:255',
             'section' => 'required|string',
             'roll_number' => 'required|integer|min:1',

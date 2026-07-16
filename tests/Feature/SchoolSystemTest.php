@@ -3,6 +3,8 @@
 use App\Models\FeePayment;
 use App\Models\Notice;
 use App\Models\Program;
+use App\Models\Semester;
+use App\Models\SemesterExam;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\User;
@@ -26,6 +28,7 @@ test('public homepage displays active notices', function () {
 test('admin can register a student and generate a unique student ID', function () {
     // Ensure programs exist first
     Program::factory()->create(['name' => 'Science']);
+    $semester = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
 
     $admin = User::factory()->create();
 
@@ -38,11 +41,12 @@ test('admin can register a student and generate a unique student ID', function (
         'parent_mobile' => '01711122233',
         'permanent_address' => 'Permanent Addr',
         'current_address' => 'Current Addr',
+        'tuition_fee' => 1500.00,
+        'semester_id' => $semester->id,
         'program_name' => 'Science',
         'section' => 'A',
         'roll_number' => 5,
         'admission_date' => '2026-01-10',
-        'tuition_fee' => 1500.00,
         'blood_group' => 'O+',
         'emergency_contact' => '01711122234',
     ]);
@@ -88,34 +92,39 @@ test('admin can register a teacher and generate a unique teacher ID', function (
 
 test('admin can enter marks and calculate GPA & Grade', function () {
     $admin = User::factory()->create();
+    $semester = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $exam = SemesterExam::create([
+        'semester_id' => $semester->id,
+        'name' => 'First Term Exam',
+        'is_final' => false,
+        'sort_order' => 1,
+    ]);
+
     $student = Student::factory()->create([
         'program_name' => 'Science',
         'section' => 'A',
+        'semester_id' => $semester->id,
     ]);
 
     $response = $this->actingAs($admin)->post('/results/marks-entry', [
-        'program_name' => 'Science',
-        'section' => 'A',
-        'exam_name' => 'First Term Exam',
-        'results' => [
-            [
-                'student_id' => $student->id,
-                'marks' => [
-                    'Mathematics' => 85, // GP: 5.0
-                    'English' => 75,       // GP: 4.0
-                    'Science' => 65,       // GP: 3.5
-                    'Social Science' => 55, // GP: 3.0
-                ],
-                'remarks' => 'Good job',
-            ],
+        'student_id' => $student->id,
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'marks' => [
+            'Mathematics' => 85, // GP: 5.0
+            'English' => 75,       // GP: 4.0
+            'Science' => 65,       // GP: 3.5
+            'Social Science' => 55, // GP: 3.0
         ],
+        'remarks' => 'Good job',
     ]);
 
     $response->assertRedirect();
     $this->assertDatabaseHas('exam_results', [
         'student_id' => $student->id,
-        'exam_name' => 'First Term Exam',
-        'gpa' => 3.88, // (5+4+3.5+3)/4 = 3.875 -> rounded to 3.88
+        'semester_id' => $semester->id,
+        'semester_exam_id' => $exam->id,
+        'gpa' => 3.88,
         'grade' => 'A-',
         'pass_status' => 'pass',
     ]);
@@ -265,4 +274,52 @@ test('admin can record partial fee payments and view transaction history ledger'
         'remaining_due' => 0,
         'status_after_payment' => 'paid',
     ]);
+});
+
+test('student is promoted to next semester on passing final semester exam', function () {
+    $admin = User::factory()->create();
+
+    // Create semesters
+    $sem1 = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $sem2 = Semester::create(['name' => '2nd Semester', 'sort_order' => 2]);
+
+    // Create final exam for sem 1
+    $finalExam = SemesterExam::create([
+        'semester_id' => $sem1->id,
+        'name' => 'Final Semester Exam',
+        'is_final' => true,
+        'sort_order' => 99,
+    ]);
+
+    $student = Student::factory()->create([
+        'program_name' => 'Science',
+        'section' => 'A',
+        'semester_id' => $sem1->id,
+    ]);
+
+    // Submit passing marks for the Final Semester Exam
+    $response = $this->actingAs($admin)->post('/results/marks-entry', [
+        'student_id' => $student->id,
+        'semester_id' => $sem1->id,
+        'semester_exam_id' => $finalExam->id,
+        'marks' => [
+            'Mathematics' => 85,
+            'English' => 75,
+        ],
+        'remarks' => 'Great final term',
+    ]);
+
+    $response->assertRedirect();
+
+    // Check database has result
+    $this->assertDatabaseHas('exam_results', [
+        'student_id' => $student->id,
+        'semester_id' => $sem1->id,
+        'semester_exam_id' => $finalExam->id,
+        'pass_status' => 'pass',
+    ]);
+
+    // The student's current semester should be automatically updated to 2nd Semester
+    $student->refresh();
+    expect($student->semester_id)->toBe($sem2->id);
 });

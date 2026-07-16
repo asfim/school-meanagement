@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Semester;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -39,6 +40,7 @@ class StudentFactory extends Factory
             'photo_path' => null,
             'emergency_contact' => '01'.fake()->numberBetween(300000000, 999999999),
             'status' => 'active',
+            'semester_id' => Semester::first()?->id ?? Semester::create(['name' => '1st Semester', 'sort_order' => 1])->id,
         ];
     }
 }
