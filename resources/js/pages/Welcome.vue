@@ -275,60 +275,67 @@ function getSubjectGrade(score: number): string {
         </header>
 
         <!-- ── Hero Banner Slider ─────────────────────────────────── -->
-        <section
-            class="sv-hero"
-            :style="activeBanners[sliderIndex]?.image_path
-                ? { backgroundImage: `url('/storage/${activeBanners[sliderIndex].image_path}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : { background: bgColors[activeBanners[sliderIndex]?.bg_color ?? 'forest'] }"
-        >
-            <!-- Gradient overlay when image is present -->
+        <section class="sv-hero">
+            <!-- Slides -->
             <div
-                v-if="activeBanners[sliderIndex]?.image_path"
-                class="sv-hero-img-overlay"
-                aria-hidden="true"
-            ></div>
+                v-for="(banner, index) in activeBanners"
+                :key="banner.id || index"
+                class="sv-slide"
+                :class="{ 'sv-slide--active': sliderIndex === index }"
+                :style="banner.image_path
+                    ? { backgroundImage: `url('/storage/${banner.image_path}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                    : { background: bgColors[banner.bg_color ?? 'forest'] }"
+            >
+                <!-- Gradient overlay when image is present -->
+                <div
+                    v-if="banner.image_path"
+                    class="sv-hero-img-overlay"
+                    aria-hidden="true"
+                ></div>
 
-            <!-- Decorative circle (only when no image) -->
-            <div
-                v-if="!activeBanners[sliderIndex]?.image_path"
-                class="sv-hero-deco"
-                aria-hidden="true"
-            ></div>
+                <!-- Decorative circle (only when no image) -->
+                <div
+                    v-if="!banner.image_path"
+                    class="sv-hero-deco"
+                    aria-hidden="true"
+                ></div>
 
-            <div class="sv-hero-inner">
-                <!-- Slide Content -->
-                <transition name="slide-fade" mode="out-in">
-                    <div :key="sliderIndex" class="sv-slide-content">
+                <div class="sv-hero-inner w-full">
+                    <div class="sv-slide-content">
                         <div class="sv-eyebrow">Notice Board · Public Portal</div>
-                        <h1>{{ activeBanners[sliderIndex]?.title }}</h1>
-                        <p v-if="activeBanners[sliderIndex]?.subtitle" class="sv-slide-subtitle">
-                            {{ activeBanners[sliderIndex]?.subtitle }}
+                        <h1>{{ banner.title }}</h1>
+                        <p v-if="banner.subtitle" class="sv-slide-subtitle">
+                            {{ banner.subtitle }}
                         </p>
-                        <p v-if="activeBanners[sliderIndex]?.paragraph" class="sv-hero-sub">
-                            {{ activeBanners[sliderIndex]?.paragraph }}
+                        <p v-if="banner.paragraph" class="sv-hero-sub">
+                            {{ banner.paragraph }}
                         </p>
                         <a
-                            v-if="activeBanners[sliderIndex]?.button_text"
-                            :href="activeBanners[sliderIndex]?.button_url ?? '#notices'"
+                            v-if="banner.button_text"
+                            :href="banner.button_url ?? '#notices'"
                             class="sv-slide-btn"
-                        >{{ activeBanners[sliderIndex]?.button_text }} →</a>
+                        >{{ banner.button_text }} →</a>
                     </div>
-                </transition>
+                </div>
+            </div>
 
-                <!-- Controls: Dots + Arrows -->
-                <div v-if="activeBanners.length > 1" class="sv-slider-controls">
-                    <button class="sv-slider-arrow" @click="prevSlide" aria-label="Previous banner">‹</button>
-                    <div class="sv-slider-dots">
-                        <button
-                            v-for="(_, i) in activeBanners"
-                            :key="i"
-                            class="sv-dot"
-                            :class="{ 'sv-dot--active': sliderIndex === i }"
-                            @click="goToSlide(i)"
-                            :aria-label="`Slide ${i + 1}`"
-                        ></button>
+            <!-- Slider Controls (positioned absolute to overlay on active slide) -->
+            <div v-if="activeBanners.length > 1" class="sv-slider-controls-overlay">
+                <div class="sv-hero-inner">
+                    <div class="sv-slider-controls">
+                        <button class="sv-slider-arrow" @click.stop="prevSlide" aria-label="Previous banner">‹</button>
+                        <div class="sv-slider-dots">
+                            <button
+                                v-for="(_, i) in activeBanners"
+                                :key="i"
+                                class="sv-dot"
+                                :class="{ 'sv-dot--active': sliderIndex === i }"
+                                @click.stop="goToSlide(i)"
+                                :aria-label="`Slide ${i + 1}`"
+                            ></button>
+                        </div>
+                        <button class="sv-slider-arrow" @click.stop="nextSlide" aria-label="Next banner">›</button>
                     </div>
-                    <button class="sv-slider-arrow" @click="nextSlide" aria-label="Next banner">›</button>
                 </div>
             </div>
         </section>
@@ -771,13 +778,38 @@ a { color: inherit; text-decoration: none; }
 /* ── Hero Slider ────────────────────────────────────────────────────────────── */
 .sv-hero {
     color: #fff;
-    padding: 64px 24px 56px;
+    padding: 0;
     position: relative;
     overflow: hidden;
     z-index: 1;
     min-height: 500px;
     max-height: 500px;
-    transition: background 0.6s ease;
+}
+.sv-slide {
+    position: absolute;
+    inset: 0;
+    padding: 64px 24px 56px;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    z-index: 0;
+    pointer-events: none;
+    transform: scale(1.02);
+    transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+}
+.sv-slide--active {
+    opacity: 1;
+    z-index: 10;
+    pointer-events: auto;
+    transform: scale(1);
+}
+.sv-slider-controls-overlay {
+    position: absolute;
+    bottom: 56px;
+    left: 24px;
+    right: 24px;
+    z-index: 20;
+    pointer-events: auto;
 }
 .sv-hero-deco {
     position: absolute; right: -60px; top: -60px; width: 320px; height: 320px;
