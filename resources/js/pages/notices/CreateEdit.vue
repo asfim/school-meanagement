@@ -135,17 +135,6 @@ const breadcrumbs = [
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-semibold mb-1">Target Audience *</label>
-                        <select v-model="form.target_audience" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
-                            <option value="all">All Visitors (Public)</option>
-                            <option value="students">Students Only</option>
-                            <option value="teachers">Teachers Only</option>
-                            <option value="parents">Parents Only</option>
-                        </select>
-                        <span v-if="form.errors.target_audience" class="text-xs text-red-500">{{ form.errors.target_audience }}</span>
-                    </div>
-
-                    <div>
                         <label class="block text-sm font-semibold mb-1">Publishing Status *</label>
                         <select v-model="form.status" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
                             <option value="active">Active (Visible)</option>
