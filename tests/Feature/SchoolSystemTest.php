@@ -586,3 +586,47 @@ test('guest can query complete academic transcript combining all semesters', fun
         ->where('transcriptData.groupedHistory.1st Semester.0.grade', 'A+')
     );
 });
+
+test('public user can view single notice page by slug', function () {
+    $notice = Notice::factory()->create([
+        'title' => 'Important Exam Instructions 2026',
+        'category' => 'exam',
+        'publish_date' => now()->format('Y-m-d'),
+        'status' => 'active',
+    ]);
+
+    $response = $this->get("/notice/{$notice->slug}");
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('PublicNoticeDetails')
+        ->where('notice.title', 'Important Exam Instructions 2026')
+    );
+});
+
+test('admin notice creation validates category option restricted to predefined choices', function () {
+    $admin = User::factory()->create();
+
+    // Invalid category
+    $response = $this->actingAs($admin)->post('/notices', [
+        'title' => 'Custom Category Notice',
+        'description' => 'Some description content',
+        'category' => 'some_custom_random_category',
+        'publish_date' => now()->format('Y-m-d'),
+        'target_audience' => 'all',
+        'status' => 'active',
+    ]);
+
+    $response->assertSessionHasErrors('category');
+
+    // Valid category
+    $response = $this->actingAs($admin)->post('/notices', [
+        'title' => 'Valid Predefined Notice',
+        'description' => 'Some description content',
+        'category' => 'holiday',
+        'publish_date' => now()->format('Y-m-d'),
+        'target_audience' => 'all',
+        'status' => 'active',
+    ]);
+
+    $response->assertSessionHasNoErrors();
+});

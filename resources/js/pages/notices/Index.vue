@@ -101,7 +101,12 @@ function deleteNotice(id: number) {
                     </div>
 
                     <!-- Description -->
-                    <p class="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">{{ notice.description }}</p>
+                    <p class="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
+                        {{ notice.description.length > 120 ? notice.description.substring(0, 120) + '...' : notice.description }}
+                        <Link v-if="notice.description.length > 120" :href="`/notice/${notice.slug}`" class="text-neutral-950 dark:text-neutral-50 font-bold hover:underline ml-1">
+                            Read More &rarr;
+                        </Link>
+                    </p>
 
                     <!-- Signatures / Footer -->
                     <div class="flex items-center justify-between text-xs text-neutral-500 pt-3 border-t border-neutral-50 dark:border-neutral-850">

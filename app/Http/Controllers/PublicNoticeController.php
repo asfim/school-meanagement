@@ -193,4 +193,16 @@ class PublicNoticeController extends Controller
             'filters' => $request->only(['student_id', 'semester_id', 'semester_exam_id', 'section', 'lookup_type']),
         ]);
     }
+
+    /**
+     * Show notice details page.
+     */
+    public function show(string $slug): Response
+    {
+        $notice = Notice::where('slug', $slug)->firstOrFail();
+
+        return Inertia::render('PublicNoticeDetails', [
+            'notice' => $notice,
+        ]);
+    }
 }

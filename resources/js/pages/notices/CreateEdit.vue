@@ -7,7 +7,9 @@ interface Notice {
     id: number;
     title: string;
     description: string;
-    category: string;
+    category: 'exam' | 'holiday' | 'event' | 'general' | 'admission' | 'urgent';
+    attachment_path: string | null;
+    image_path: string | null;
     publish_date: string;
     expiry_date: string | null;
     target_audience: 'all' | 'students' | 'teachers' | 'parents';
@@ -29,26 +31,35 @@ const form = useForm({
     expiry_date: props.notice && props.notice.expiry_date ? new Date(props.notice.expiry_date).toISOString().split('T')[0] : '',
     target_audience: props.notice?.target_audience || 'all',
     status: props.notice?.status || 'active',
+    attachment: null as File | null,
+    featured_image: null as File | null,
+    remove_image: false,
 });
 
-const standardCategories = ['general', 'exam', 'holiday', 'event', 'admission', 'urgent'];
-const selectedCategory = ref(props.notice?.category || 'general');
-const customCategory = ref('');
+const imagePreview = ref<string | null>(
+    props.notice?.image_path ? `/storage/${props.notice.image_path}` : null
+);
 
-onMounted(() => {
-    if (props.notice && !standardCategories.includes(props.notice.category)) {
-        selectedCategory.value = 'custom';
-        customCategory.value = props.notice.category;
-    }
-});
-
-watch([selectedCategory, customCategory], () => {
-    if (selectedCategory.value === 'custom') {
-        form.category = customCategory.value;
+function onImageChange(e: Event) {
+    const file = (e.target as HTMLInputElement).files?.[0] || null;
+    form.featured_image = file;
+    form.remove_image = false;
+    if (file) {
+        imagePreview.value = URL.createObjectURL(file);
     } else {
-        form.category = selectedCategory.value;
+        imagePreview.value = props.notice?.image_path ? `/storage/${props.notice.image_path}` : null;
     }
-}, { immediate: true });
+}
+
+function removeImage() {
+    form.featured_image = null;
+    form.remove_image = true;
+    imagePreview.value = null;
+    const input = document.getElementById('image-input') as HTMLInputElement;
+    if (input) {
+        input.value = '';
+    }
+}
 
 function submit() {
     if (isEdit) {
@@ -98,20 +109,15 @@ const breadcrumbs = [
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-semibold mb-1">Category *</label>
-                        <select v-model="selectedCategory" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                        <select v-model="form.category" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
                             <option value="general">General Circular</option>
                             <option value="exam">Exam Schedule</option>
                             <option value="holiday">Holiday Notice</option>
                             <option value="event">School Event</option>
                             <option value="admission">Admissions Notice</option>
                             <option value="urgent">Urgent Announcement</option>
-                            <option value="custom">+ Add Custom Category...</option>
                         </select>
                         <span v-if="form.errors.category" class="text-xs text-red-500">{{ form.errors.category }}</span>
-
-                        <div v-if="selectedCategory === 'custom'" class="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <input v-model="customCategory" type="text" placeholder="Type custom category name..." class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none" required />
-                        </div>
                     </div>
 
                     <div>
@@ -147,6 +153,45 @@ const breadcrumbs = [
                             <option value="inactive">Inactive (Hidden)</option>
                         </select>
                         <span v-if="form.errors.status" class="text-xs text-red-500">{{ form.errors.status }}</span>
+                    </div>
+                </div>
+
+                <!-- Attachment and Featured Image fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-neutral-100 dark:border-neutral-800 pt-6">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Upload Attachment (PDF or Image)</label>
+                        <input
+                            type="file"
+                            accept=".pdf,image/*"
+                            class="w-full text-sm text-neutral-500 border border-neutral-300 dark:border-neutral-700 rounded-lg p-2 bg-neutral-50 dark:bg-neutral-950"
+                            @change="(e) => form.attachment = (e.target as HTMLInputElement).files?.[0] || null"
+                        />
+                        <span v-if="notice?.attachment_path" class="text-xs text-neutral-400 block mt-1">
+                            Current file: <a :href="'/storage/' + notice.attachment_path" target="_blank" class="text-neutral-700 dark:text-neutral-300 underline font-medium">View uploaded file</a>
+                        </span>
+                        <span v-if="form.errors.attachment" class="text-xs text-red-500 block mt-1">{{ form.errors.attachment }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Featured Image</label>
+                        <div class="flex items-center gap-4">
+                            <div v-if="imagePreview" class="w-16 h-16 rounded-lg border overflow-hidden bg-neutral-100 dark:bg-neutral-800 flex-shrink-0 flex items-center justify-center">
+                                <img :src="imagePreview" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <input
+                                    id="image-input"
+                                    type="file"
+                                    accept="image/*"
+                                    class="w-full text-sm text-neutral-500 border border-neutral-300 dark:border-neutral-700 rounded-lg p-2 bg-neutral-50 dark:bg-neutral-950"
+                                    @change="onImageChange"
+                                />
+                                <div v-if="imagePreview" class="flex gap-2">
+                                    <button type="button" @click="removeImage" class="text-xs text-red-500 hover:underline">Remove Image</button>
+                                </div>
+                            </div>
+                        </div>
+                        <span v-if="form.errors.featured_image" class="text-xs text-red-500 block mt-1">{{ form.errors.featured_image }}</span>
                     </div>
                 </div>
 

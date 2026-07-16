@@ -34,8 +34,11 @@ interface Banner {
 interface Notice {
     id: number;
     title: string;
+    slug: string;
     description: string;
     category: 'exam' | 'holiday' | 'event' | 'general' | 'admission' | 'urgent';
+    attachment_path: string | null;
+    image_path: string | null;
     publish_date: string;
     expiry_date: string | null;
     target_audience: 'all' | 'students' | 'teachers' | 'parents';
@@ -428,15 +431,25 @@ function getSubjectGrade(score: number): string {
                         class="sv-tape"
                         :style="{ background: catColor(notice.category) }"
                     >{{ notice.category }}</div>
+
+                    <!-- Featured Image -->
+                    <div v-if="notice.image_path" style="margin: -26px -18px 18px -18px; height: 160px; overflow: hidden; border-radius: 3px 3px 0 0;">
+                        <img :src="'/storage/' + notice.image_path" class="w-full h-full object-cover" alt="Featured Image" />
+                    </div>
+
                     <div class="sv-notice-meta">
                         <span>{{ formatDate(notice.publish_date) }}</span>
                         <span v-if="notice.is_pinned">· Pinned</span>
                     </div>
                     <h3>{{ notice.title }}</h3>
-                    <p class="sv-notice-excerpt">{{ notice.description }}</p>
-                    <div class="sv-notice-footer">
+                    <p class="sv-notice-excerpt">
+                        {{ notice.description.length > 180 ? notice.description.substring(0, 180) + '...' : notice.description }}
+                    </p>
+                    <div class="sv-notice-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--sv-line); padding-top: 10px; margin-top: auto;">
                         <span class="sv-notice-by">Posted by: {{ notice.posted_by || 'Admin Office' }}</span>
-                        <span v-if="notice.has_attachment" class="sv-attach-badge">📎 Attachment</span>
+                        <Link :href="'/notice/' + notice.slug" class="sv-read-more-btn" style="font-size: 11.5px; font-weight: 700; color: var(--sv-forest); border: 1.5px solid var(--sv-forest); padding: 5px 12px; border-radius: 6px; transition: all 0.2s;">
+                            Read More &rarr;
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -800,7 +813,7 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 920px) { .sv-notice-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .sv-notice-grid { grid-template-columns: 1fr; } }
 
-/* Notice card with bulletin-board tilt */
+/* Notice card with straight alignment */
 .sv-notice-card {
     background: var(--sv-card);
     border: 1px solid var(--sv-line);
@@ -810,10 +823,7 @@ a { color: inherit; text-decoration: none; }
     box-shadow: 0 10px 22px -16px rgba(20,33,61,0.4);
     transition: transform .18s ease, box-shadow .18s ease;
 }
-.sv-notice-card[data-index="0"] { transform: rotate(-0.6deg); }
-.sv-notice-card[data-index="1"] { transform: rotate(0.5deg); }
-.sv-notice-card[data-index="2"] { transform: rotate(-0.3deg); }
-.sv-notice-card:hover { transform: rotate(0deg) translateY(-5px); box-shadow: 0 22px 32px -18px rgba(20,33,61,0.45); }
+.sv-notice-card:hover { transform: translateY(-5px); box-shadow: 0 22px 32px -18px rgba(20,33,61,0.45); }
 
 /* Pin */
 .sv-pin {
@@ -847,6 +857,7 @@ a { color: inherit; text-decoration: none; }
     border-top: 1px dashed var(--sv-line); padding-top: 10px;
 }
 .sv-notice-by { font-size: 11px; color: var(--sv-text-soft); }
+.sv-read-more-btn:hover { background: var(--sv-forest) !important; color: #fff !important; }
 .sv-attach-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--sv-text-soft); display: flex; align-items: center; gap: 4px; }
 
 /* Empty state */
