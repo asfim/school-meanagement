@@ -8,10 +8,9 @@ interface Banner {
     title: string;
     subtitle: string | null;
     paragraph: string | null;
-    button_text: string | null;
-    button_url: string | null;
     bg_color: 'forest' | 'ink' | 'brass';
     image_path: string | null;
+    overlay_color: 'none' | 'dark' | 'dark-heavy' | 'forest' | 'ink' | 'brass';
     sort_order: number;
     is_active: boolean;
 }
@@ -22,15 +21,14 @@ const isEdit = props.banner !== null;
 
 // Form state (using router.post with FormData for file upload)
 const form = ref({
-    title:        props.banner?.title        ?? '',
-    subtitle:     props.banner?.subtitle     ?? '',
-    paragraph:    props.banner?.paragraph    ?? '',
-    button_text:  props.banner?.button_text  ?? '',
-    button_url:   props.banner?.button_url   ?? '',
-    bg_color:     props.banner?.bg_color     ?? 'forest',
-    sort_order:   props.banner?.sort_order   ?? 0,
-    is_active:    props.banner?.is_active    ?? true,
-    remove_image: false,
+    title:         props.banner?.title         ?? '',
+    subtitle:      props.banner?.subtitle      ?? '',
+    paragraph:     props.banner?.paragraph     ?? '',
+    bg_color:      props.banner?.bg_color      ?? 'forest',
+    overlay_color: props.banner?.overlay_color ?? 'dark',
+    sort_order:    props.banner?.sort_order    ?? 0,
+    is_active:     props.banner?.is_active     ?? true,
+    remove_image:  false,
 });
 
 const errors = ref<Record<string, string>>({});
@@ -94,15 +92,14 @@ function submit() {
     errors.value = {};
 
     const data = new FormData();
-    data.append('title',        form.value.title);
-    data.append('subtitle',     form.value.subtitle);
-    data.append('paragraph',    form.value.paragraph);
-    data.append('button_text',  form.value.button_text);
-    data.append('button_url',   form.value.button_url);
-    data.append('bg_color',     form.value.bg_color);
-    data.append('sort_order',   String(form.value.sort_order));
-    data.append('is_active',    form.value.is_active ? '1' : '0');
-    data.append('remove_image', form.value.remove_image ? '1' : '0');
+    data.append('title',         form.value.title);
+    data.append('subtitle',      form.value.subtitle);
+    data.append('paragraph',     form.value.paragraph);
+    data.append('bg_color',      form.value.bg_color);
+    data.append('overlay_color', form.value.overlay_color);
+    data.append('sort_order',    String(form.value.sort_order));
+    data.append('is_active',     form.value.is_active ? '1' : '0');
+    data.append('remove_image',  form.value.remove_image ? '1' : '0');
     if (imageFile.value) {
         data.append('image', imageFile.value);
     }
@@ -158,9 +155,6 @@ function submit() {
                     </div>
                     <div v-if="form.subtitle" class="text-sm font-medium opacity-80 mb-1">{{ form.subtitle }}</div>
                     <div v-if="form.paragraph" class="text-xs opacity-70 max-w-lg">{{ form.paragraph }}</div>
-                    <span v-if="form.button_text" class="inline-block mt-3 px-4 py-1.5 bg-yellow-500 text-yellow-900 font-bold rounded-full text-sm">
-                        {{ form.button_text }}
-                    </span>
                 </div>
             </div>
 
@@ -191,16 +185,18 @@ function submit() {
                     <textarea v-model="form.paragraph" rows="3" placeholder="Write a short description..." class="sv-input resize-none"></textarea>
                 </div>
 
-                <!-- Button -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">Button Text</label>
-                        <input v-model="form.button_text" type="text" placeholder="e.g. Learn More" class="sv-input" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">Button URL</label>
-                        <input v-model="form.button_url" type="text" placeholder="/notices or https://..." class="sv-input" />
-                    </div>
+                <!-- Overlay Color -->
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Overlay Color <span class="text-red-500">*</span></label>
+                    <select v-model="form.overlay_color" class="sv-input">
+                        <option value="none">No Overlay</option>
+                        <option value="dark">Dark Tint (Standard)</option>
+                        <option value="dark-heavy">Heavy Dark Tint</option>
+                        <option value="forest">Forest Green Tint</option>
+                        <option value="ink">Dark Ink Tint</option>
+                        <option value="brass">Brass Gold Tint</option>
+                    </select>
+                    <p v-if="errors.overlay_color" class="mt-1 text-xs text-red-600">{{ errors.overlay_color }}</p>
                 </div>
 
                 <!-- ── Image Upload ─────────────────────────────────────── -->
