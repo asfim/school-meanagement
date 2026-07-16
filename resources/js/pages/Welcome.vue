@@ -8,6 +8,9 @@ const siteSettings = computed(() => page.props.site_settings as {
     tagline: string;
     logo_path: string | null;
     favicon_path: string | null;
+    about_title: string | null;
+    about_description: string | null;
+    about_stats: Array<{ label: string; value: string }> | null;
 });
 import FlashToast from '@/components/FlashToast.vue';
 
@@ -622,14 +625,22 @@ function getSubjectGrade(score: number): string {
             <div class="sv-about-inner">
                 <div class="sv-about-text">
                     <div class="sv-eyebrow sv-eyebrow--dark">About Us</div>
-                    <h2>40 Years of Education, Discipline &amp; Values</h2>
-                    <p>Since 1986, Saraswati Vidyaniketan has been shaping the future of thousands of students in Dhaka. We believe true education means nurturing the hidden potential within every child with the right care and guidance.</p>
+                    <h2>{{ siteSettings.about_title || '40 Years of Education, Discipline &amp; Values' }}</h2>
+                    <p>{{ siteSettings.about_description || 'Since 1986, we have been shaping the future of thousands of students. We believe true education means nurturing the hidden potential within every child with the right care and guidance.' }}</p>
                 </div>
                 <div class="sv-stat-grid">
-                    <div class="sv-stat-box"><div class="sv-stat-num">1850+</div><div class="sv-stat-label">Students</div></div>
-                    <div class="sv-stat-box"><div class="sv-stat-num">96</div><div class="sv-stat-label">Teachers</div></div>
-                    <div class="sv-stat-box"><div class="sv-stat-num">98%</div><div class="sv-stat-label">Pass Rate</div></div>
-                    <div class="sv-stat-box"><div class="sv-stat-num">40+</div><div class="sv-stat-label">Years of Experience</div></div>
+                    <template v-if="siteSettings.about_stats && siteSettings.about_stats.length">
+                        <div v-for="stat in siteSettings.about_stats" :key="stat.label" class="sv-stat-box">
+                            <div class="sv-stat-num">{{ stat.value }}</div>
+                            <div class="sv-stat-label">{{ stat.label }}</div>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="sv-stat-box"><div class="sv-stat-num">1850+</div><div class="sv-stat-label">Students</div></div>
+                        <div class="sv-stat-box"><div class="sv-stat-num">96</div><div class="sv-stat-label">Teachers</div></div>
+                        <div class="sv-stat-box"><div class="sv-stat-num">98%</div><div class="sv-stat-label">Pass Rate</div></div>
+                        <div class="sv-stat-box"><div class="sv-stat-num">40+</div><div class="sv-stat-label">Years of Experience</div></div>
+                    </template>
                 </div>
             </div>
         </section>

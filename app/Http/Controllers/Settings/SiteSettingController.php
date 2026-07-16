@@ -22,6 +22,14 @@ class SiteSettingController extends Controller
             'tagline' => 'EST. 1986 · DHAKA',
             'logo_path' => null,
             'favicon_path' => null,
+            'about_title' => '40 Years of Education, Discipline & Values',
+            'about_description' => 'Since 1986, we have been shaping the future of thousands of students. We believe true education means nurturing the hidden potential within every child with the right care and guidance.',
+            'about_stats' => [
+                ['label' => 'Students', 'value' => '1850+'],
+                ['label' => 'Teachers', 'value' => '96'],
+                ['label' => 'Pass Rate', 'value' => '98%'],
+                ['label' => 'Years of Experience', 'value' => '40+'],
+            ],
         ]);
 
         return Inertia::render('settings/SiteSettings', [
@@ -48,11 +56,19 @@ class SiteSettingController extends Controller
             'favicon' => ['nullable', 'image', 'mimes:png,jpg,jpeg,ico,webp', 'max:512'],
             'remove_logo' => ['boolean'],
             'remove_favicon' => ['boolean'],
+            'about_title' => ['nullable', 'string', 'max:255'],
+            'about_description' => ['nullable', 'string'],
+            'about_stats' => ['nullable', 'array'],
+            'about_stats.*.label' => ['required', 'string', 'max:100'],
+            'about_stats.*.value' => ['required', 'string', 'max:50'],
         ]);
 
         $data = [
             'institute_name' => $validated['institute_name'],
             'tagline' => $validated['tagline'],
+            'about_title' => $validated['about_title'] ?? null,
+            'about_description' => $validated['about_description'] ?? null,
+            'about_stats' => $validated['about_stats'] ?? null,
         ];
 
         // Handle logo

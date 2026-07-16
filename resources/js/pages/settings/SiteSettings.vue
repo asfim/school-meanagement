@@ -18,6 +18,9 @@ interface Settings {
     tagline: string;
     logo_path: string | null;
     favicon_path: string | null;
+    about_title: string | null;
+    about_description: string | null;
+    about_stats: Array<{ label: string; value: string }> | null;
 }
 
 const props = defineProps<{
@@ -38,6 +41,14 @@ const form = useForm({
     favicon: null as File | null,
     remove_logo: false,
     remove_favicon: false,
+    about_title: props.settings.about_title ?? '',
+    about_description: props.settings.about_description ?? '',
+    about_stats: props.settings.about_stats ?? [
+        { label: 'Students', value: '1850+' },
+        { label: 'Teachers', value: '96' },
+        { label: 'Pass Rate', value: '98%' },
+        { label: 'Years of Experience', value: '40+' },
+    ] as Array<{ label: string; value: string }>,
 });
 
 const logoPreview = ref<string | null>(

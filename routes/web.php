@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AboutUsController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CampusLifeController;
 use App\Http\Controllers\FeeController;
@@ -12,6 +13,10 @@ use App\Http\Controllers\SemesterExamController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
+use App\Models\FeePayment;
+use App\Models\Semester;
+use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,19 +25,20 @@ Route::get('/result', [PublicNoticeController::class, 'result'])->name('public.r
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        $studentCount = \App\Models\Student::count();
-        $teacherCount = \App\Models\Teacher::count();
-        $totalFees = (float) \App\Models\FeePayment::sum('amount_paid');
+        $studentCount = Student::count();
+        $teacherCount = Teacher::count();
+        $totalFees = (float) FeePayment::sum('amount_paid');
 
         $semestersData = [];
-        $semesters = \App\Models\Semester::orderBy('id')->get();
+        $semesters = Semester::orderBy('id')->get();
         foreach ($semesters as $semester) {
-            $students = \App\Models\Student::where('semester_id', $semester->id)
+            $students = Student::where('semester_id', $semester->id)
                 ->with(['examResults.semesterExam'])
                 ->get();
-            
+
             $rankedStudents = $students->map(function ($student) {
                 $cgpa = $student->calculateCgpa();
+
                 return [
                     'id' => $student->id,
                     'student_id' => $student->student_id,
@@ -41,10 +47,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'grade' => $student->calculateCgpaGrade($cgpa),
                 ];
             })
-            ->sortByDesc('cgpa')
-            ->take(3)
-            ->values()
-            ->all();
+                ->sortByDesc('cgpa')
+                ->take(3)
+                ->values()
+                ->all();
 
             $semestersData[] = [
                 'id' => $semester->id,
@@ -105,6 +111,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Programs
     Route::resource('programs', ProgramController::class);
+
+    // About Us Page Management
+    Route::get('about-us', [AboutUsController::class, 'edit'])->name('about-us.edit');
+    Route::post('about-us', [AboutUsController::class, 'update'])->name('about-us.update');
 });
 
 require __DIR__.'/settings.php';

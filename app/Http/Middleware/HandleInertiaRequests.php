@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SiteSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -51,11 +52,14 @@ class HandleInertiaRequests extends Middleware
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
             ],
-            'site_settings' => \App\Models\SiteSetting::first() ?? [
+            'site_settings' => SiteSetting::first() ?? [
                 'institute_name' => 'Saraswati Vidyaniketan',
                 'tagline' => 'EST. 1986 · DHAKA',
                 'logo_path' => null,
                 'favicon_path' => null,
+                'about_title' => null,
+                'about_description' => null,
+                'about_stats' => null,
             ],
         ]);
     }

@@ -11,5 +11,15 @@ class SiteSetting extends Model
         'institute_name',
         'tagline',
         'favicon_path',
+        'about_title',
+        'about_description',
+        'about_stats',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'about_stats' => 'array',
+        ];
+    }
 }
