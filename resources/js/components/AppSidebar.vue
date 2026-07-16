@@ -82,16 +82,10 @@ const mainNavItems: NavItem[] = [
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route('dashboard')">
-                            <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
+        <SidebarHeader class="p-4">
+            <Link :href="route('dashboard')" class="flex items-center gap-3 px-2 py-1.5 overflow-hidden">
+                <AppLogo />
+            </Link>
         </SidebarHeader>
 
         <SidebarContent>
