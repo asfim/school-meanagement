@@ -203,6 +203,11 @@ function applyFilters() {
     });
 }
 
+function refreshSearch() {
+    search.value = '';
+    applyFilters();
+}
+
 function openAddMarks(student: StudentRow) {
     activeStudent.value = student;
     form.student_id = student.id;
@@ -251,15 +256,24 @@ const breadcrumbs = [
             </div>
 
             <!-- Filters Toolbar -->
-            <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-4 animate-in fade-in duration-200">
-                <div>
+            <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-5 gap-4 animate-in fade-in duration-200">
+                <div class="sm:col-span-2">
                     <label class="block text-xs font-semibold text-neutral-500 mb-1">Search Student</label>
-                    <input
-                        v-model="search"
-                        type="text"
-                        placeholder="Search by Roll, Name, ID..."
-                        class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-450 focus:outline-none"
-                    />
+                    <div class="flex gap-2">
+                        <input
+                            v-model="search"
+                            type="text"
+                            placeholder="Search by Roll, Name, ID..."
+                            class="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-450 focus:outline-none"
+                        />
+                        <button
+                            @click="refreshSearch"
+                            type="button"
+                            class="px-3 py-2 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm font-semibold rounded-lg text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-700 transition"
+                        >
+                            Clear
+                        </button>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Program *</label>

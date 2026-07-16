@@ -59,6 +59,11 @@ watch([selectedProgram, selectedSection], () => {
     applyFilters();
 });
 
+function refreshSearch() {
+    search.value = '';
+    applyFilters();
+}
+
 function deleteStudent(id: number) {
     Swal.fire({
         title: 'Are you sure?',
@@ -114,14 +119,21 @@ function issueTc(id: number) {
 
             <!-- Filters Toolbar -->
             <div class="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 shadow-sm flex flex-col md:flex-row md:items-center gap-4">
-                <div class="flex-1">
+                <div class="flex-1 flex gap-2">
                     <input
                         v-model="search"
                         type="text"
                         placeholder="Search by name, Student ID, roll number..."
-                        class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-neutral-300"
+                        class="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-neutral-300"
                         @keyup.enter="applyFilters"
                     />
+                    <button
+                        @click="refreshSearch"
+                        type="button"
+                        class="px-3 py-2 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm font-semibold rounded-lg text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-700 transition"
+                    >
+                        Clear
+                    </button>
                 </div>
                 <div class="flex gap-4">
                     <select
