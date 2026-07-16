@@ -84,13 +84,19 @@ class ResultController extends Controller
      */
     public function marksEntry(Request $request): Response
     {
-        $programName = $request->input('program_name', 'Science');
+        $programName = $request->input('program_name', '');
         $section = $request->input('section', 'A');
         $search = $request->input('search');
 
-        $query = Student::with(['semester', 'examResults'])
-            ->where('program_name', $programName)
-            ->where('section', $section);
+        $query = Student::with(['semester', 'examResults']);
+
+        if ($programName !== '') {
+            $query->where('program_name', $programName);
+        }
+
+        if ($section !== '') {
+            $query->where('section', $section);
+        }
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($search) {
@@ -100,7 +106,7 @@ class ResultController extends Controller
             });
         }
 
-        $students = $query->orderBy('roll_number')->get();
+        $students = $query->orderBy('roll_number')->paginate(10)->withQueryString();
 
         $subjects = Subject::orderBy('name')->pluck('name')->toArray();
         if (empty($subjects)) {
@@ -109,35 +115,41 @@ class ResultController extends Controller
 
         $semesters = Semester::with('exams')->orderBy('sort_order')->get();
 
-        return Inertia::render('results/MarksEntry', [
-            'students' => $students->map(function ($s) {
-                $examResults = $s->examResults
-                    ->map(function ($res) {
-                        return [
-                            'semester_id' => $res->semester_id,
-                            'semester_exam_id' => $res->semester_exam_id,
-                            'marks' => $res->marks,
-                            'pass_status' => $res->pass_status,
-                            'remarks' => $res->remarks,
-                        ];
-                    })->values()->toArray();
+        $mappedStudents = collect($students->items())->map(function ($s) {
+            $examResults = $s->examResults
+                ->map(function ($res) {
+                    return [
+                        'semester_id' => $res->semester_id,
+                        'semester_exam_id' => $res->semester_exam_id,
+                        'marks' => $res->marks,
+                        'pass_status' => $res->pass_status,
+                        'remarks' => $res->remarks,
+                    ];
+                })->values()->toArray();
 
-                return [
-                    'id' => $s->id,
-                    'student_id' => $s->student_id,
-                    'full_name_en' => $s->full_name_en,
-                    'roll_number' => $s->roll_number,
-                    'section' => $s->section,
-                    'program_name' => $s->program_name,
-                    'current_semester' => $s->semester ? $s->semester->name : 'N/A',
-                    'semester_id' => $s->semester_id,
-                    'exam_results' => $examResults,
-                ];
-            }),
+            return [
+                'id' => $s->id,
+                'student_id' => $s->student_id,
+                'full_name_en' => $s->full_name_en,
+                'roll_number' => $s->roll_number,
+                'section' => $s->section,
+                'program_name' => $s->program_name,
+                'current_semester' => $s->semester ? $s->semester->name : 'N/A',
+                'semester_id' => $s->semester_id,
+                'exam_results' => $examResults,
+            ];
+        });
+
+        $studentsPaginated = $students->setCollection($mappedStudents);
+
+        return Inertia::render('results/MarksEntry', [
+            'students' => $studentsPaginated,
             'subjects' => $subjects,
             'semesters' => $semesters,
             'programs' => Program::orderBy('name')->pluck('name')->toArray(),
             'sections' => ['A', 'B', 'C'],
+            'program_name' => $programName,
+            'section' => $section,
             'currentFilters' => [
                 'program_name' => $programName,
                 'section' => $section,

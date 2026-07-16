@@ -387,8 +387,8 @@ test('marks entry screen flags last semester students and includes existing resu
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page
         ->component('results/MarksEntry')
-        ->where('students.0.exam_results.0.semester_exam_id', $exam->id)
-        ->where('students.0.exam_results.0.marks.Mathematics', 80)
-        ->where('students.0.exam_results.0.marks.English', 25)
+        ->where('students.data.0.exam_results.0.semester_exam_id', $exam->id)
+        ->where('students.data.0.exam_results.0.marks.Mathematics', 80)
+        ->where('students.data.0.exam_results.0.marks.English', 25)
     );
 });

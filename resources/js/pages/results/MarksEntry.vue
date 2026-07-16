@@ -36,8 +36,23 @@ interface Semester {
     exams: SemesterExam[];
 }
 
+interface LinkItem {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedStudents {
+    data: StudentRow[];
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+    links: LinkItem[];
+}
+
 const props = defineProps<{
-    students: StudentRow[];
+    students: PaginatedStudents;
     subjects: string[];
     semesters: Semester[];
     programs: string[];
@@ -249,6 +264,7 @@ const breadcrumbs = [
                 <div>
                     <label class="block text-xs font-semibold text-neutral-500 mb-1">Select Program *</label>
                     <select v-model="selectedProgram" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
+                        <option value="">All</option>
                         <option v-for="p in programs" :key="p" :value="p">{{ p }}</option>
                     </select>
                 </div>
@@ -283,7 +299,7 @@ const breadcrumbs = [
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
-                            <tr v-for="student in students" :key="student.id" class="hover:bg-neutral-50/50 dark:hover:bg-neutral-950/30 text-neutral-700 dark:text-neutral-300">
+                            <tr v-for="student in students.data" :key="student.id" class="hover:bg-neutral-50/50 dark:hover:bg-neutral-950/30 text-neutral-700 dark:text-neutral-300">
                                 <td class="p-4 font-bold text-neutral-950 dark:text-neutral-100">{{ student.roll_number }}</td>
                                 <td class="p-4 font-mono text-xs font-semibold">{{ student.student_id }}</td>
                                 <td class="p-4 font-semibold text-neutral-950 dark:text-neutral-100">{{ student.full_name_en }}</td>
@@ -302,11 +318,28 @@ const breadcrumbs = [
                                     </span>
                                 </td>
                             </tr>
-                            <tr v-if="students.length === 0">
+                            <tr v-if="students.data.length === 0">
                                 <td colspan="6" class="p-8 text-center text-neutral-500">No students found.</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="students.last_page > 1" class="p-4 bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+                    <div class="text-xs text-neutral-500">Page {{ students.current_page }} of {{ students.last_page }}</div>
+                    <div class="flex gap-2">
+                        <Link
+                            v-for="link in students.links"
+                            :key="link.label"
+                            :href="link.url || '#'"
+                            :class="[
+                                'px-3 py-1 text-xs rounded border transition',
+                                link.active ? 'bg-neutral-950 text-white border-neutral-950 dark:bg-neutral-50 dark:text-neutral-950' : 'bg-white hover:bg-neutral-100 text-neutral-700 border-neutral-300 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300'
+                            ]"
+                            v-html="link.label"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
