@@ -135,7 +135,7 @@ function issueTc(id: number) {
                         Clear
                     </button>
                 </div>
-                <div class="flex gap-4">
+                <div class="flex flex-wrap gap-2 md:gap-4 w-full md:w-auto">
                     <select
                         v-model="selectedProgram"
                         class="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2"
