@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 interface ResultHistoryItem {
     id: number;
@@ -36,6 +37,37 @@ const breadcrumbs = [
     { title: 'Academic Results', href: '/results' },
     { title: 'Student History', href: '#' },
 ];
+
+const cgpa = computed(() => {
+    let totalGpa = 0;
+    let examCount = 0;
+    Object.values(props.groupedHistory).forEach(exams => {
+        exams.forEach(exam => {
+            const val = parseFloat(exam.gpa);
+            if (!isNaN(val)) {
+                totalGpa += val;
+                examCount++;
+            }
+        });
+    });
+    return examCount > 0 ? (totalGpa / examCount).toFixed(2) : '0.00';
+});
+
+const cgpaGrade = computed(() => {
+    const score = parseFloat(cgpa.value);
+    if (isNaN(score) || score <= 0) return 'N/A';
+    if (score >= 5.0) return 'A+';
+    if (score >= 4.0) return 'A';
+    if (score >= 3.5) return 'A-';
+    if (score >= 3.0) return 'B';
+    if (score >= 2.0) return 'C';
+    if (score >= 1.0) return 'D';
+    return 'F';
+});
+
+function printHistory() {
+    window.print();
+}
 </script>
 
 <template>
@@ -43,6 +75,25 @@ const breadcrumbs = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 max-w-5xl mx-auto space-y-6">
+            <!-- Navigation and Control Bar -->
+            <div class="flex items-center justify-between print:hidden">
+                <Link
+                    href="/results"
+                    class="inline-flex items-center text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition"
+                >
+                    &larr; Back to Results
+                </Link>
+                <button
+                    @click="printHistory"
+                    class="inline-flex items-center justify-center rounded-lg bg-neutral-950 dark:bg-neutral-50 dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white px-4 py-2.5 text-xs font-bold shadow transition"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.844l-.326-2.12m11.21 2.12l.326-2.12m-11.536 0L8.72 5.844A2.25 2.25 0 0110.92 4h2.16a2.25 2.25 0 012.2 1.844l.326 2.12m-11.537 0h11.537m-11.537 0H4.75A2.25 2.25 0 002.5 10v6a2.25 2.25 0 002.25 2.25h14.5A2.25 2.25 0 0021.5 16v-6a2.25 2.25 0 00-2.25-2.25h-.92m-11.536 0h11.536M9 20h6M9 16h6" />
+                    </svg>
+                    Print Academic History
+                </button>
+            </div>
+
             <!-- Student Header Information -->
             <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-in fade-in duration-200">
                 <div class="space-y-1">
@@ -50,9 +101,16 @@ const breadcrumbs = [
                     <h1 class="text-2xl font-black text-neutral-900 dark:text-neutral-50">{{ student.full_name_en }}</h1>
                     <p class="text-sm text-neutral-500">{{ student.program_name }} &bull; Section {{ student.section }} &bull; Roll {{ student.roll_number }}</p>
                 </div>
-                <div class="flex flex-col md:items-end gap-1">
-                    <span class="text-xs text-neutral-450 font-medium">Student ID: <span class="font-mono font-bold text-neutral-905 dark:text-neutral-100">{{ student.student_id }}</span></span>
-                    <span class="text-xs text-neutral-450 font-medium">Current Semester: <span class="font-semibold text-neutral-905 dark:text-neutral-100">{{ student.semester?.name || 'N/A' }}</span></span>
+                <div class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-4 md:gap-1.5 border-t md:border-t-0 pt-4 md:pt-0 border-neutral-150 dark:border-neutral-850">
+                    <div class="text-left md:text-right space-y-1">
+                        <div class="text-xs text-neutral-450 font-medium">Student ID: <span class="font-mono font-bold text-neutral-905 dark:text-neutral-100">{{ student.student_id }}</span></div>
+                        <div class="text-xs text-neutral-450 font-medium">Current Semester: <span class="font-semibold text-neutral-905 dark:text-neutral-100">{{ student.semester?.name || 'N/A' }}</span></div>
+                    </div>
+                    <div class="border-l md:border-l-0 md:border-t border-neutral-200 dark:border-neutral-800 pl-4 md:pl-0 md:pt-1.5 flex items-center gap-2">
+                        <span class="text-xs font-bold text-neutral-450 uppercase tracking-wider">CGPA:</span>
+                        <span class="text-lg font-black font-mono text-indigo-650 dark:text-indigo-400">{{ cgpa }}</span>
+                        <span class="text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">{{ cgpaGrade }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -124,3 +182,84 @@ const breadcrumbs = [
         </div>
     </AppLayout>
 </template>
+
+<style>
+@media print {
+    /* Hide layout sidebar, header, triggers, and control buttons */
+    header,
+    aside,
+    [data-sidebar="sidebar"],
+    .peer,
+    .group.peer,
+    [data-collapsible],
+    .print\:hidden {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Reset global page backgrounds and layout structures */
+    html, body {
+        background-color: white !important;
+        color: black !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Override wrapper margins, flex constraints, and paddings */
+    .flex.min-h-svh,
+    .flex-1,
+    main,
+    .max-w-5xl,
+    .p-6 {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    /* Space out semester blocks in print view */
+    .space-y-8 > * + * {
+        margin-top: 2.5rem !important;
+    }
+
+    /* Keep exam cards in a two-column grid on print if width allows */
+    .grid {
+        display: grid !important;
+        grid-template-cols: repeat(2, minmax(0, 1fr)) !important;
+        gap: 1.5rem !important;
+    }
+
+    /* Clean card style for print format */
+    .bg-white,
+    .dark\:bg-neutral-900 {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #e5e7eb !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+
+    /* Readable color settings on paper */
+    .text-neutral-500,
+    .text-neutral-450 {
+        color: #4b5563 !important;
+    }
+
+    .text-neutral-900,
+    .dark\:text-neutral-50 {
+        color: #000000 !important;
+    }
+
+    .bg-neutral-50,
+    .dark\:bg-neutral-950\/40 {
+        background-color: #f3f4f6 !important;
+        color: #111827 !important;
+    }
+}
+</style>

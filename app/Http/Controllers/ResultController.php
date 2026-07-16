@@ -88,7 +88,7 @@ class ResultController extends Controller
         $section = $request->input('section', 'A');
         $search = $request->input('search');
 
-        $query = Student::with('semester')
+        $query = Student::with(['semester', 'examResults'])
             ->where('program_name', $programName)
             ->where('section', $section);
 
@@ -108,9 +108,23 @@ class ResultController extends Controller
         }
 
         $semesters = Semester::with('exams')->orderBy('sort_order')->get();
+        $maxSortOrder = $semesters->max('sort_order');
 
         return Inertia::render('results/MarksEntry', [
-            'students' => $students->map(function ($s) {
+            'students' => $students->map(function ($s) use ($maxSortOrder) {
+                $isLastSemester = $s->semester && $s->semester->sort_order === $maxSortOrder;
+
+                $currentSemesterResults = $s->examResults
+                    ->where('semester_id', $s->semester_id)
+                    ->map(function ($res) {
+                        return [
+                            'semester_exam_id' => $res->semester_exam_id,
+                            'marks' => $res->marks,
+                            'pass_status' => $res->pass_status,
+                            'remarks' => $res->remarks,
+                        ];
+                    })->values()->toArray();
+
                 return [
                     'id' => $s->id,
                     'student_id' => $s->student_id,
@@ -120,6 +134,8 @@ class ResultController extends Controller
                     'program_name' => $s->program_name,
                     'current_semester' => $s->semester ? $s->semester->name : 'N/A',
                     'semester_id' => $s->semester_id,
+                    'is_last_semester' => $isLastSemester,
+                    'current_semester_results' => $currentSemesterResults,
                 ];
             }),
             'subjects' => $subjects,
@@ -250,8 +266,9 @@ class ResultController extends Controller
     /**
      * Display student result history.
      */
-    public function show(Student $student): Response
+    public function show(Student $result): Response
     {
+        $student = $result;
         $student->load(['semester']);
 
         $results = ExamResult::with(['semester', 'semesterExam'])
@@ -274,6 +291,7 @@ class ResultController extends Controller
                 'gpa' => $res->gpa,
                 'grade' => $res->grade,
                 'pass_status' => $res->pass_status,
+                'is_final' => $res->semesterExam ? (bool) $res->semesterExam->is_final : false,
                 'date' => $res->created_at->format('Y-m-d'),
             ];
         });

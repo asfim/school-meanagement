@@ -323,3 +323,26 @@ test('student is promoted to next semester on passing final semester exam', func
     $student->refresh();
     expect($student->semester_id)->toBe($sem2->id);
 });
+
+test('admin can view student academic results history page and see profile details', function () {
+    $admin = User::factory()->create();
+    $semester = Semester::create(['name' => '1st Semester', 'sort_order' => 1]);
+    $student = Student::factory()->create([
+        'full_name_en' => 'John Doe History',
+        'student_id' => 'STU-12345',
+        'program_name' => 'Science',
+        'section' => 'A',
+        'roll_number' => 10,
+        'semester_id' => $semester->id,
+    ]);
+
+    $response = $this->actingAs($admin)->get("/results/{$student->id}");
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('results/StudentHistory')
+        ->where('student.id', $student->id)
+        ->where('student.full_name_en', 'John Doe History')
+        ->where('student.student_id', 'STU-12345')
+    );
+});
