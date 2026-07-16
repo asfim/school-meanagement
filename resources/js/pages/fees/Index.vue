@@ -193,15 +193,15 @@ function submitCollection() {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 shadow-sm">
                     <span class="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Total Collections</span>
-                    <span class="text-3xl font-black text-green-600 dark:text-green-400 mt-2 block font-mono">${{ Number(summary.total_collected || 0).toFixed(2) }}</span>
+                    <span class="text-3xl font-black text-green-600 dark:text-green-400 mt-2 block font-mono">৳{{ Number(summary.total_collected || 0).toFixed(2) }}</span>
                 </div>
                 <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 shadow-sm">
                     <span class="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Outstanding Dues</span>
-                    <span class="text-3xl font-black text-red-500 dark:text-red-400 mt-2 block font-mono">${{ Number(summary.total_dues || 0).toFixed(2) }}</span>
+                    <span class="text-3xl font-black text-red-500 dark:text-red-400 mt-2 block font-mono">৳{{ Number(summary.total_dues || 0).toFixed(2) }}</span>
                 </div>
                 <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 shadow-sm">
                     <span class="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Discounts Given</span>
-                    <span class="text-3xl font-black text-amber-500 dark:text-amber-400 mt-2 block font-mono">${{ Number(summary.total_discounts || 0).toFixed(2) }}</span>
+                    <span class="text-3xl font-black text-amber-500 dark:text-amber-400 mt-2 block font-mono">৳{{ Number(summary.total_discounts || 0).toFixed(2) }}</span>
                 </div>
             </div>
 
@@ -268,9 +268,9 @@ function submitCollection() {
                                 <td class="p-4 font-bold text-neutral-950 dark:text-neutral-100">{{ row.roll_number }}</td>
                                 <td class="p-4 font-mono text-xs font-semibold">{{ row.student_uid }}</td>
                                 <td class="p-4 font-semibold text-neutral-950 dark:text-neutral-100">{{ row.full_name }}</td>
-                                <td class="p-4 text-center font-mono font-bold">${{ Number(row.amount_due).toFixed(2) }}</td>
-                                <td class="p-4 text-center font-mono font-bold text-red-500">${{ Number(row.amount_due - row.amount_paid - row.discount).toFixed(2) }}</td>
-                                <td class="p-4 text-center font-mono font-medium text-green-600 dark:text-green-450">${{ Number(row.amount_paid).toFixed(2) }}</td>
+                                <td class="p-4 text-center font-mono font-bold">৳{{ Number(row.amount_due).toFixed(2) }}</td>
+                                <td class="p-4 text-center font-mono font-bold text-red-500">৳{{ Number(row.amount_due - row.amount_paid - row.discount).toFixed(2) }}</td>
+                                <td class="p-4 text-center font-mono font-medium text-green-600 dark:text-green-450">৳{{ Number(row.amount_paid).toFixed(2) }}</td>
                                 <td class="p-4 text-center">
                                     <span v-if="row.status === 'paid'" class="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">Paid</span>
                                     <span v-else-if="row.status === 'partial'" class="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Partial</span>
@@ -440,13 +440,13 @@ function submitCollection() {
                         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
                             <tr v-for="t in activeRow?.transactions" :key="t.id" class="text-neutral-700 dark:text-neutral-350">
                                 <td class="p-3 font-mono font-medium">{{ new Date(t.payment_date).toLocaleDateString() }}</td>
-                                <td class="p-3 text-center font-mono">${{ Number(t.tuition_fee).toFixed(2) }}</td>
+                                <td class="p-3 text-center font-mono">৳{{ Number(t.tuition_fee).toFixed(2) }}</td>
                                 <td class="p-3 text-center capitalize">{{ t.discount_type }}</td>
-                                <td class="p-3 text-center font-mono">{{ t.discount_type === 'percentage' ? t.discount_value + '%' : (t.discount_type === 'none' ? '-' : '$' + Number(t.discount_value).toFixed(2)) }}</td>
-                                <td class="p-3 text-center font-mono text-amber-500">${{ Number(t.discount_amount).toFixed(2) }}</td>
-                                <td class="p-3 text-center font-mono font-bold">${{ Number(t.net_payable_amount).toFixed(2) }}</td>
-                                <td class="p-3 text-center font-mono text-green-600 dark:text-green-455 font-bold">${{ Number(t.amount_paid).toFixed(2) }}</td>
-                                <td class="p-3 text-center font-mono text-red-500">${{ Number(t.remaining_due).toFixed(2) }}</td>
+                                <td class="p-3 text-center font-mono">{{ t.discount_type === 'percentage' ? t.discount_value + '%' : (t.discount_type === 'none' ? '-' : '৳' + Number(t.discount_value).toFixed(2)) }}</td>
+                                <td class="p-3 text-center font-mono text-amber-500">৳{{ Number(t.discount_amount).toFixed(2) }}</td>
+                                <td class="p-3 text-center font-mono font-bold">৳{{ Number(t.net_payable_amount).toFixed(2) }}</td>
+                                <td class="p-3 text-center font-mono text-green-600 dark:text-green-455 font-bold">৳{{ Number(t.amount_paid).toFixed(2) }}</td>
+                                <td class="p-3 text-center font-mono text-red-500">৳{{ Number(t.remaining_due).toFixed(2) }}</td>
                                 <td class="p-3 text-center">
                                     <span v-if="t.status_after_payment === 'paid'" class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">Paid</span>
                                     <span v-else class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Partial</span>

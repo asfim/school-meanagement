@@ -99,24 +99,24 @@ function printReceipt() {
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between">
                         <span>Standard Monthly Fee:</span>
-                        <span class="font-semibold">${{ parseFloat(payment.amount_due).toFixed(2) }}</span>
+                        <span class="font-semibold">৳{{ parseFloat(payment.amount_due).toFixed(2) }}</span>
                     </div>
                     <div class="flex justify-between text-amber-600">
                         <span>Scholarship / Discount Applied:</span>
-                        <span>-${{ parseFloat(payment.discount).toFixed(2) }}</span>
+                        <span>-৳{{ parseFloat(payment.discount).toFixed(2) }}</span>
                     </div>
                     <div class="flex justify-between text-neutral-500">
                         <span>Total Due Balance:</span>
-                        <span>${{ (parseFloat(payment.amount_due) - parseFloat(payment.discount)).toFixed(2) }}</span>
+                        <span>৳{{ (parseFloat(payment.amount_due) - parseFloat(payment.discount)).toFixed(2) }}</span>
                     </div>
                     <div class="border-t border-dashed border-neutral-200 my-2"></div>
                     <div class="flex justify-between text-green-600 font-bold text-base">
                         <span>Amount Paid:</span>
-                        <span>${{ parseFloat(payment.amount_paid).toFixed(2) }}</span>
+                        <span>৳{{ parseFloat(payment.amount_paid).toFixed(2) }}</span>
                     </div>
                     <div class="flex justify-between text-red-500 font-bold">
                         <span>Remaining Balance:</span>
-                        <span>${{ (parseFloat(payment.amount_due) - parseFloat(payment.discount) - parseFloat(payment.amount_paid)).toFixed(2) }}</span>
+                        <span>৳{{ (parseFloat(payment.amount_due) - parseFloat(payment.discount) - parseFloat(payment.amount_paid)).toFixed(2) }}</span>
                     </div>
                 </div>
             </div>

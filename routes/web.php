@@ -20,7 +20,47 @@ Route::get('/result', [PublicNoticeController::class, 'result'])->name('public.r
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('Dashboard');
+        $studentCount = \App\Models\Student::count();
+        $teacherCount = \App\Models\Teacher::count();
+        $totalFees = (float) \App\Models\FeePayment::sum('amount_paid');
+
+        $semestersData = [];
+        $semesters = \App\Models\Semester::orderBy('id')->get();
+        foreach ($semesters as $semester) {
+            $students = \App\Models\Student::where('semester_id', $semester->id)
+                ->with(['examResults.semesterExam'])
+                ->get();
+            
+            $rankedStudents = $students->map(function ($student) {
+                $cgpa = $student->calculateCgpa();
+                return [
+                    'id' => $student->id,
+                    'student_id' => $student->student_id,
+                    'full_name' => $student->full_name_en,
+                    'cgpa' => $cgpa,
+                    'grade' => $student->calculateCgpaGrade($cgpa),
+                ];
+            })
+            ->sortByDesc('cgpa')
+            ->take(3)
+            ->values()
+            ->all();
+
+            $semestersData[] = [
+                'id' => $semester->id,
+                'name' => $semester->name,
+                'students' => $rankedStudents,
+            ];
+        }
+
+        return Inertia::render('Dashboard', [
+            'stats' => [
+                'student_count' => $studentCount,
+                'teacher_count' => $teacherCount,
+                'total_tuition_fees' => $totalFees,
+            ],
+            'semesters_best_students' => $semestersData,
+        ]);
     })->name('dashboard');
 
     // Students
