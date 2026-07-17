@@ -96,7 +96,7 @@ class StudentController extends Controller
 
         // Generate unique Student ID: STU-YYYY-XXXX
         $year = date('Y');
-        $lastStudent = Student::where('student_id', 'like', "STU-{$year}-%")->orderBy('id', 'desc')->first();
+        $lastStudent = Student::where('student_id', 'like', "STU-{$year}-%")->orderBy('student_id', 'desc')->first();
         $nextNum = 1;
         if ($lastStudent !== null) {
             $parts = explode('-', $lastStudent->student_id);
