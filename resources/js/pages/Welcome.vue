@@ -277,7 +277,7 @@ function getSubjectGrade(score: number): string {
 </script>
 
 <template>
-    <Head title="Saraswati Vidyaniketan — Notice Board" />
+    <Head :title="siteSettings.institute_name + ' — Notice Board'" />
     <FlashToast />
 
     <div class="sv-root">
