@@ -138,7 +138,6 @@ const breadcrumbs = [
                         <label class="block text-sm font-semibold mb-1">Publishing Status *</label>
                         <select v-model="form.status" class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none">
                             <option value="active">Active (Visible)</option>
-                            <option value="draft">Draft (Private)</option>
                             <option value="inactive">Inactive (Hidden)</option>
                         </select>
                         <span v-if="form.errors.status" class="text-xs text-red-500">{{ form.errors.status }}</span>
