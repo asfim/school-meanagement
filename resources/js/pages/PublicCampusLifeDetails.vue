@@ -34,8 +34,9 @@ const excerpt = computed(() => {
 <template>
     <!-- SEO Meta Title & Meta Description -->
     <Head>
-        <title>{{ item.title }} — Campus Life — {{ siteSettings.institute_name }}</title>
-        <meta name="description" :content="excerpt" />
+        <title>{{ item.title }} — Campus Life — {{ siteSettings.institute_name || 'Ideal Professional Institute (IPI)' }}</title>
+        <meta name="description" :content="excerpt || 'Campus Life gallery details page.'" />
+        <meta name="keywords" content="Ideal Professional Institute, IPI, ipi, Campus Life, Gallery Item, Academic Events" />
     </Head>
 
     <div class="nd-root">

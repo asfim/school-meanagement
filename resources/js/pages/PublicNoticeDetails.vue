@@ -57,10 +57,10 @@ const excerpt = computed(() => {
 </script>
 
 <template>
-    <!-- SEO Meta Title & Meta Description -->
     <Head>
-        <title>{{ notice.title }} — {{ siteSettings.institute_name }}</title>
-        <meta name="description" :content="excerpt" />
+        <title>{{ notice.title }} — {{ siteSettings.institute_name || 'Ideal Professional Institute (IPI)' }}</title>
+        <meta name="description" :content="excerpt || 'Notice details page.'" />
+        <meta name="keywords" content="Ideal Professional Institute, IPI, ipi, Notices, Announcements, School Circulars" />
     </Head>
 
     <div class="nd-root">
