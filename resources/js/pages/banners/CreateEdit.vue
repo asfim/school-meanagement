@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 interface Banner {
@@ -19,8 +19,8 @@ const props = defineProps<{ banner: Banner | null }>();
 
 const isEdit = props.banner !== null;
 
-// Form state (using router.post with FormData for file upload)
-const form = ref({
+const form = useForm({
+    _method: isEdit ? 'PUT' : 'POST',
     title:         props.banner?.title         ?? '',
     subtitle:      props.banner?.subtitle      ?? '',
     paragraph:     props.banner?.paragraph     ?? '',
@@ -29,13 +29,10 @@ const form = ref({
     sort_order:    props.banner?.sort_order    ?? 0,
     is_active:     props.banner?.is_active     ?? true,
     remove_image:  false,
+    image:         null as File | null,
 });
 
-const errors = ref<Record<string, string>>({});
-const processing = ref(false);
-
 // Image state
-const imageFile    = ref<File | null>(null);
 const imagePreview = ref<string | null>(null);
 const existingImage = computed(() =>
     props.banner?.image_path
@@ -46,8 +43,8 @@ const existingImage = computed(() =>
 function onImageChange(e: Event) {
     const target = e.target as HTMLInputElement;
     const file   = target.files?.[0] ?? null;
-    imageFile.value    = file;
-    form.value.remove_image = false;
+    form.image         = file;
+    form.remove_image = false;
     if (file) {
         const reader = new FileReader();
         reader.onload = (ev) => { imagePreview.value = ev.target?.result as string; };
@@ -58,9 +55,9 @@ function onImageChange(e: Event) {
 }
 
 function clearImage() {
-    imageFile.value    = null;
+    form.image         = null;
     imagePreview.value = null;
-    form.value.remove_image = true;
+    form.remove_image = true;
     const input = document.getElementById('image-input') as HTMLInputElement;
     if (input) input.value = '';
 }
@@ -72,13 +69,13 @@ const bgOptions = [
 ];
 
 const previewBg = computed(() => {
-    if (imagePreview.value || (existingImage.value && !form.value.remove_image)) return 'transparent';
+    if (imagePreview.value || (existingImage.value && !form.remove_image)) return 'transparent';
     const map: Record<string, string> = {
         forest: '#1F4D3A',
         ink:    '#14213D',
         brass:  '#8a6520',
     };
-    return map[form.value.bg_color] ?? '#1F4D3A';
+    return map[form.bg_color] ?? '#1F4D3A';
 });
 
 const breadcrumbs = [
@@ -88,32 +85,14 @@ const breadcrumbs = [
 ];
 
 function submit() {
-    processing.value = true;
-    errors.value = {};
-
-    const data = new FormData();
-    data.append('title',         form.value.title);
-    data.append('subtitle',      form.value.subtitle);
-    data.append('paragraph',     form.value.paragraph);
-    data.append('bg_color',      form.value.bg_color);
-    data.append('overlay_color', form.value.overlay_color);
-    data.append('sort_order',    String(form.value.sort_order));
-    data.append('is_active',     form.value.is_active ? '1' : '0');
-    data.append('remove_image',  form.value.remove_image ? '1' : '0');
-    if (imageFile.value) {
-        data.append('image', imageFile.value);
-    }
-
     const url = isEdit ? `/banners/${props.banner!.id}` : '/banners';
 
-    if (isEdit) {
-        data.append('_method', 'PUT');
-    }
-
-    router.post(url, data, {
-        forceFormData: true,
-        onError: (errs) => { errors.value = errs; processing.value = false; },
-        onFinish: () => { processing.value = false; },
+    form.transform((data) => ({
+        ...data,
+        is_active: data.is_active ? 1 : 0,
+        remove_image: data.remove_image ? 1 : 0,
+    })).post(url, {
+        onSuccess: () => {},
     });
 }
 </script>
@@ -163,14 +142,14 @@ function submit() {
 
                 <!-- Title -->
                 <div>
-                    <label class="block text-sm font-semibold mb-1">Title <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-semibold mb-1">Title <span class="text-neutral-400 font-normal">(optional, leave empty if text is on image)</span></label>
                     <input
                         v-model="form.title"
                         type="text"
                         placeholder="e.g. Welcome to Saraswati Vidyaniketan"
                         class="sv-input"
                     />
-                    <p v-if="errors.title" class="mt-1 text-xs text-red-600">{{ errors.title }}</p>
+                    <p v-if="form.errors.title" class="mt-1 text-xs text-red-600">{{ form.errors.title }}</p>
                 </div>
 
                 <!-- Subtitle -->
@@ -196,7 +175,7 @@ function submit() {
                         <option value="ink">Dark Ink Tint</option>
                         <option value="brass">Brass Gold Tint</option>
                     </select>
-                    <p v-if="errors.overlay_color" class="mt-1 text-xs text-red-600">{{ errors.overlay_color }}</p>
+                    <p v-if="form.errors.overlay_color" class="mt-1 text-xs text-red-600">{{ form.errors.overlay_color }}</p>
                 </div>
 
                 <!-- ── Image Upload ─────────────────────────────────────── -->
@@ -218,7 +197,7 @@ function submit() {
                         <img :src="imagePreview" alt="New banner preview" class="h-16 w-28 object-cover rounded-md border border-neutral-300" />
                         <div class="flex-1">
                             <p class="text-xs font-semibold text-neutral-700 dark:text-neutral-300">New image selected</p>
-                            <p class="text-xs text-neutral-400">{{ imageFile?.name }}</p>
+                            <p class="text-xs text-neutral-400">{{ form.image?.name }}</p>
                         </div>
                         <button type="button" @click="clearImage" class="text-xs font-bold text-red-600 hover:underline px-3 py-1 rounded border border-red-200 hover:bg-red-50">Clear</button>
                     </div>
@@ -233,7 +212,7 @@ function submit() {
                             <p class="text-sm font-semibold text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900">
                                 Click to upload image
                             </p>
-                            <p class="text-xs text-neutral-400">JPG, PNG, WebP — max 2MB. Will be used as full background.</p>
+                            <p class="text-xs text-neutral-400">JPG, PNG, WebP — max 10MB. Recommended size: 1920x500 px. Keep all key logos/text in the center 1200px (360px padding on left & right sides) to prevent cropping on smaller screens.</p>
                         </div>
                     </label>
                     <input
@@ -243,7 +222,7 @@ function submit() {
                         class="hidden"
                         @change="onImageChange"
                     />
-                    <p v-if="errors.image" class="mt-1 text-xs text-red-600">{{ errors.image }}</p>
+                    <p v-if="form.errors.image" class="mt-1 text-xs text-red-600">{{ form.errors.image }}</p>
                 </div>
 
                 <!-- BG Color + Sort + Status -->
@@ -285,10 +264,10 @@ function submit() {
                 <div class="flex items-center gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
                     <button
                         type="submit"
-                        :disabled="processing"
+                        :disabled="form.processing"
                         class="px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg shadow transition disabled:opacity-60"
                     >
-                        {{ processing ? 'Saving...' : (isEdit ? 'Update Banner' : 'Create Banner') }}
+                        {{ form.processing ? 'Saving...' : (isEdit ? 'Update Banner' : 'Create Banner') }}
                     </button>
                     <a href="/banners" class="text-sm text-neutral-500 hover:underline">Cancel</a>
                 </div>

@@ -28,20 +28,21 @@ class BannerController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'paragraph' => ['nullable', 'string'],
             'bg_color' => ['required', 'in:forest,ink,brass'],
             'overlay_color' => ['required', 'in:none,dark,dark-heavy,forest,ink,brass'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         ]);
 
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('banners', 'public');
         }
 
+        $validated['title'] = $validated['title'] ?? '';
         unset($validated['image']);
         Banner::create($validated);
 
@@ -59,14 +60,14 @@ class BannerController extends Controller
     public function update(Request $request, Banner $banner): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'paragraph' => ['nullable', 'string'],
             'bg_color' => ['required', 'in:forest,ink,brass'],
             'overlay_color' => ['required', 'in:none,dark,dark-heavy,forest,ink,brass'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'remove_image' => ['boolean'],
         ]);
 
@@ -82,6 +83,7 @@ class BannerController extends Controller
             $validated['image_path'] = $request->file('image')->store('banners', 'public');
         }
 
+        $validated['title'] = $validated['title'] ?? '';
         unset($validated['image'], $validated['remove_image']);
         $banner->update($validated);
 

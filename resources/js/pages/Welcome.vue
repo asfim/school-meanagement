@@ -387,8 +387,8 @@ function getSubjectGrade(score: number): string {
 
                 <div class="sv-hero-inner w-full">
                     <div class="sv-slide-content">
-                        <div class="sv-eyebrow">Notice Board · Public Portal</div>
-                        <h1>{{ banner.title }}</h1>
+                        <div v-if="banner.title" class="sv-eyebrow">Notice Board · Public Portal</div>
+                        <h1 v-if="banner.title">{{ banner.title }}</h1>
                         <p v-if="banner.subtitle" class="sv-slide-subtitle">
                             {{ banner.subtitle }}
                         </p>
