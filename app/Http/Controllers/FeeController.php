@@ -148,7 +148,9 @@ class FeeController extends Controller
     public function collect(Request $request): RedirectResponse
     {
         $request->validate([
-            'payment_id' => 'required|exists:fee_payments,id',
+            'payment_id' => 'nullable|exists:fee_payments,id',
+            'student_id' => 'required_without:payment_id|exists:students,id',
+            'fee_month' => 'required_without:payment_id|string|regex:/^\d{4}-\d{2}$/',
             'discount_type' => 'required|string|in:percentage,fixed,none',
             'discount_value' => 'required|numeric|min:0',
             'discount_amount' => 'required|numeric|min:0',
@@ -157,7 +159,28 @@ class FeeController extends Controller
             'remarks' => 'nullable|string|max:255',
         ]);
 
-        $payment = FeePayment::findOrFail($request->input('payment_id'));
+        if ($request->filled('payment_id')) {
+            $payment = FeePayment::findOrFail($request->input('payment_id'));
+        } else {
+            $student = Student::findOrFail($request->input('student_id'));
+            $month = $request->input('fee_month');
+
+            $payment = FeePayment::where('student_id', $student->id)
+                ->where('fee_month', $month)
+                ->first();
+
+            if (! $payment) {
+                $payment = FeePayment::create([
+                    'student_id' => $student->id,
+                    'fee_month' => $month,
+                    'amount_due' => $student->tuition_fee,
+                    'amount_paid' => 0.00,
+                    'discount' => 0.00,
+                    'status' => 'unpaid',
+                    'remarks' => 'Billing auto-generated during manual collection.',
+                ]);
+            }
+        }
 
         if ($payment->status === 'paid') {
             return redirect()->back()->withErrors(['amount_paid' => 'This fee has already been fully paid.']);

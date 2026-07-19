@@ -23,6 +23,7 @@ interface Student {
     emergency_contact: string;
     status: string;
     photo_path: string | null;
+    tuition_fee: number;
 }
 
 interface Program {

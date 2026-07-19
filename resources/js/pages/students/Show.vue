@@ -23,6 +23,7 @@ interface Student {
     emergency_contact: string;
     status: 'active' | 'transferred' | 'inactive';
     photo_path: string | null;
+    tuition_fee: number;
 }
 
 const props = defineProps<{
@@ -142,6 +143,7 @@ function issueTc() {
                         <div class="flex justify-between"><span class="text-neutral-500">Program:</span> <span class="font-semibold">{{ student.program_name }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Section:</span> <span class="font-semibold">Section {{ student.section }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Roll Number:</span> <span class="font-semibold">{{ student.roll_number }}</span></div>
+                        <div class="flex justify-between"><span class="text-neutral-500">Tuition Fee:</span> <span class="font-semibold">৳{{ Number(student.tuition_fee).toFixed(2) }}</span></div>
                         <div class="flex justify-between"><span class="text-neutral-500">Blood Group:</span> <span class="font-semibold text-red-650">{{ student.blood_group || 'N/A' }}</span></div>
                     </div>
                 </div>

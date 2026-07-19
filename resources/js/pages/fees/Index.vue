@@ -79,6 +79,8 @@ const activeRow = ref<FeeSheetRow | null>(null);
 
 const collectForm = useForm({
     payment_id: null as number | null,
+    student_id: null as number | null,
+    fee_month: '',
     discount_type: 'none',
     discount_value: 0,
     discount_amount: 0,
@@ -116,6 +118,9 @@ function refreshSearch() {
 
 const currentDue = computed(() => {
     if (!activeRow.value) return 0;
+    if (!activeRow.value.has_billing) {
+        return activeRow.value.tuition_fee;
+    }
     return activeRow.value.amount_due - activeRow.value.amount_paid - activeRow.value.discount;
 });
 
@@ -133,9 +138,9 @@ const netPayableAmount = computed(() => {
     return net > 0 ? net : 0;
 });
 
-// Discount is only available on the first collection (status === 'unpaid')
+// Discount is only available on the first collection (status === 'unpaid' or 'unbilled')
 const isFirstPayment = computed(() => {
-    return activeRow.value?.status === 'unpaid';
+    return activeRow.value?.status === 'unpaid' || activeRow.value?.status === 'unbilled';
 });
 
 watch(netPayableAmount, (newVal) => {
@@ -145,11 +150,15 @@ watch(netPayableAmount, (newVal) => {
 function openCollectModal(row: FeeSheetRow) {
     activeRow.value = row;
     collectForm.payment_id = row.payment_id;
+    collectForm.student_id = row.has_billing ? null : row.student_id;
+    collectForm.fee_month = row.has_billing ? '' : selectedMonth.value;
     collectForm.discount_type = 'none';
     collectForm.discount_value = 0;
     collectForm.discount_amount = 0;
     
-    const remaining = row.amount_due - row.amount_paid - row.discount;
+    const remaining = row.has_billing
+        ? row.amount_due - row.amount_paid - row.discount
+        : row.tuition_fee;
     collectForm.amount_paid = remaining > 0 ? remaining : 0;
     collectForm.payment_method = 'cash';
     collectForm.remarks = '';
@@ -268,8 +277,8 @@ function submitCollection() {
                                 <td class="p-4 font-bold text-neutral-950 dark:text-neutral-100">{{ row.roll_number }}</td>
                                 <td class="p-4 font-mono text-xs font-semibold">{{ row.student_uid }}</td>
                                 <td class="p-4 font-semibold text-neutral-950 dark:text-neutral-100">{{ row.full_name }}</td>
-                                <td class="p-4 text-center font-mono font-bold">৳{{ Number(row.amount_due).toFixed(2) }}</td>
-                                <td class="p-4 text-center font-mono font-bold text-red-500">৳{{ Number(row.amount_due - row.amount_paid - row.discount).toFixed(2) }}</td>
+                                <td class="p-4 text-center font-mono font-bold">৳{{ Number(row.tuition_fee).toFixed(2) }}</td>
+                                <td class="p-4 text-center font-mono font-bold text-red-500">৳{{ Number(row.has_billing ? (row.amount_due - row.amount_paid - row.discount) : row.tuition_fee).toFixed(2) }}</td>
                                 <td class="p-4 text-center font-mono font-medium text-green-600 dark:text-green-450">৳{{ Number(row.amount_paid).toFixed(2) }}</td>
                                 <td class="p-4 text-center">
                                     <span v-if="row.status === 'paid'" class="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">Paid</span>
@@ -277,9 +286,9 @@ function submitCollection() {
                                     <span v-else-if="row.status === 'unpaid'" class="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-red-50 text-red-700 border border-red-200 animate-pulse">Overdue</span>
                                     <span v-else class="text-xs text-neutral-400 italic">unbilled</span>
                                 </td>
-                                <td class="p-4 text-right space-x-2">
+                                <td class="p-4 text-right space-x-2 whitespace-nowrap">
                                     <button
-                                        v-if="row.has_billing && row.status !== 'paid'"
+                                        v-if="row.status !== 'paid'"
                                         @click="openCollectModal(row)"
                                         class="px-2 py-1 bg-neutral-950 hover:bg-neutral-800 text-white rounded text-xs font-bold"
                                     >
@@ -330,7 +339,7 @@ function submitCollection() {
 
         <!-- Collection modal dialog -->
         <div v-if="showCollectModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 max-w-md w-full rounded-xl p-6 space-y-4 shadow-xl">
+            <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 max-w-md w-full rounded-xl p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
                 <div>
                     <h3 class="text-lg font-black text-neutral-900 dark:text-neutral-50">Record Fee Collection</h3>
                     <p class="text-xs text-neutral-400">Student: {{ activeRow?.full_name }} ({{ activeRow?.student_uid }})</p>
