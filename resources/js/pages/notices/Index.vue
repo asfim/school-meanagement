@@ -110,7 +110,7 @@ function deleteNotice(id: number) {
 
                     <!-- Signatures / Footer -->
                     <div class="flex items-center justify-between text-xs text-neutral-500 pt-3 border-t border-neutral-50 dark:border-neutral-850">
-                        <div>Posted by: <span class="font-bold text-neutral-750">{{ notice.posted_by || 'Admin Office' }}</span></div>
+                        <div>Posted by: <span class="font-bold text-neutral-750">{{ ['Exam Controller', 'Principal Office', 'Academic Coordinator', 'Admissions Office', 'Admin Office'].includes(notice.posted_by) ? notice.posted_by : 'Admin' }}</span></div>
                         <div class="flex gap-3">
                             <Link :href="`/notices/${notice.id}/edit`" class="text-neutral-900 dark:text-neutral-100 hover:underline font-bold">Edit Notice</Link>
                             <button @click="deleteNotice(notice.id)" class="text-red-650 hover:underline">Delete</button>

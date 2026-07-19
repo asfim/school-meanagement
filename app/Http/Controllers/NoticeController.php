@@ -50,7 +50,7 @@ class NoticeController extends Controller
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:2048',
         ]);
 
-        $validated['posted_by'] = auth()->user()->name ?? 'Principal Office';
+        $validated['posted_by'] = 'Admin';
 
         if ($request->hasFile('attachment')) {
             $path = $request->file('attachment')->store('notices', 'public');

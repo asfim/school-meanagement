@@ -490,7 +490,7 @@ function getSubjectGrade(score: number): string {
                         {{ notice.description.length > 180 ? notice.description.substring(0, 180) + '...' : notice.description }}
                     </p>
                     <div class="sv-notice-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--sv-line); padding-top: 10px; margin-top: auto;">
-                        <span class="sv-notice-by">Posted by: {{ notice.posted_by || 'Admin Office' }}</span>
+                        <span class="sv-notice-by">Posted by: {{ ['Exam Controller', 'Principal Office', 'Academic Coordinator', 'Admissions Office', 'Admin Office'].includes(notice.posted_by) ? notice.posted_by : 'Admin' }}</span>
                         <Link :href="'/notice/' + notice.slug" class="sv-read-more-btn" style="font-size: 11.5px; font-weight: 700; color: var(--sv-forest); border: 1.5px solid var(--sv-forest); padding: 5px 12px; border-radius: 6px; transition: all 0.2s;">
                             Read More &rarr;
                         </Link>
