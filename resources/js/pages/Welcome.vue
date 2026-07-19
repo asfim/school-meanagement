@@ -577,17 +577,23 @@ function getSubjectGrade(score: number): string {
                     No gallery items yet. Admin can add them from the dashboard.
                 </div>
                 <div class="sv-gallery-grid" v-else>
-                    <div
+                    <Link
                         v-for="(item, i) in campusLifeItems"
                         :key="item.id"
-                        class="sv-gtile"
+                        :href="`/campus-life/${item.id}`"
+                        class="sv-gtile group"
                         :class="['sv-g' + ((i % 4) + 1), { 'sv-has-image': item.image_path }]"
                         :style="item.image_path
                             ? { backgroundImage: `url('/storage/${item.image_path}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
                             : {}"
                     >
-                        <span>{{ item.title }}</span>
-                    </div>
+                        <div class="relative z-10 w-full flex flex-col justify-end items-start">
+                            <span class="block text-shadow font-extrabold text-sm mb-1">{{ item.title }}</span>
+                            <span v-if="item.description" class="text-[11.5px] text-neutral-200 group-hover:text-white transition flex items-center gap-1 font-semibold">
+                                Read More &rarr;
+                            </span>
+                        </div>
+                    </Link>
                 </div>
             </div>
         </section>
@@ -1175,7 +1181,7 @@ a { color: inherit; text-decoration: none; }
     border-radius: 12px; position: relative; overflow: hidden;
     display: flex; align-items: flex-end; padding: 16px;
     color: #fff; font-size: 13px; font-weight: 600;
-    cursor: default;
+    cursor: pointer; text-decoration: none;
 }
 .sv-gtile span { position: relative; z-index: 1; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
 .sv-gtile::before { content: ''; position: absolute; inset: 0; opacity: 0.9; transition: opacity .3s; }

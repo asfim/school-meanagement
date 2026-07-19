@@ -205,4 +205,16 @@ class PublicNoticeController extends Controller
             'notice' => $notice,
         ]);
     }
+
+    /**
+     * Show campus life details page.
+     */
+    public function showCampusLife(int $id): Response
+    {
+        $item = CampusLifeItem::where('is_active', true)->findOrFail($id);
+
+        return Inertia::render('PublicCampusLifeDetails', [
+            'item' => $item,
+        ]);
+    }
 }

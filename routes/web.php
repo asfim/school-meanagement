@@ -24,6 +24,7 @@ use Inertia\Inertia;
 Route::get('/', [PublicNoticeController::class, 'welcome'])->name('home');
 Route::get('/result', [PublicNoticeController::class, 'result'])->name('public.result');
 Route::get('/notice/{slug}', [PublicNoticeController::class, 'show'])->name('public.notice.show');
+Route::get('/campus-life/{id}', [PublicNoticeController::class, 'showCampusLife'])->name('public.campus-life.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
