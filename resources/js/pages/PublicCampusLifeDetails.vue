@@ -454,12 +454,14 @@ const excerpt = computed(() => {
     border-radius: 12px;
     margin-bottom: 28px;
     border: 1px solid var(--sv-line);
+    background: #f8f9fa;
 }
 
 .nd-featured-image {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    max-height: 420px;
+    object-fit: contain;
 }
 
 .nd-description {

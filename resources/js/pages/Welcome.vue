@@ -576,22 +576,38 @@ function getSubjectGrade(score: number): string {
                 <div v-if="campusLifeItems.length === 0" class="sv-empty-state" style="grid-column:1/-1">
                     No gallery items yet. Admin can add them from the dashboard.
                 </div>
-                <div class="sv-gallery-grid" v-else>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" v-else>
                     <Link
-                        v-for="(item, i) in campusLifeItems"
+                        v-for="item in campusLifeItems"
                         :key="item.id"
                         :href="`/campus-life/${item.id}`"
-                        class="sv-gtile group"
-                        :class="['sv-g' + ((i % 4) + 1), { 'sv-has-image': item.image_path }]"
-                        :style="item.image_path
-                            ? { backgroundImage: `url('/storage/${item.image_path}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                            : {}"
+                        class="bg-[#14213d] border border-neutral-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition duration-200 group flex flex-col"
+                        style="text-decoration: none;"
                     >
-                        <div class="relative z-10 w-full flex flex-col justify-end items-start">
-                            <span class="block text-shadow font-extrabold text-sm mb-1">{{ item.title }}</span>
-                            <span v-if="item.description" class="text-[11.5px] text-neutral-200 group-hover:text-white transition flex items-center gap-1 font-semibold">
-                                Read More &rarr;
-                            </span>
+                        <!-- Image Container with Aspect Ratio -->
+                        <div class="aspect-[4/3] w-full overflow-hidden bg-[#14213d] relative">
+                            <img
+                                v-if="item.image_path"
+                                :src="`/storage/${item.image_path}`"
+                                class="w-full h-full object-contain group-hover:scale-105 transition duration-300"
+                                :alt="item.title"
+                            />
+                            <div v-else class="w-full h-full flex items-center justify-center text-4xl text-neutral-300 bg-neutral-800">
+                                🏫
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-extrabold text-white text-base mb-1 line-clamp-2" style="font-family: 'Inter', sans-serif;">{{ item.title }}</h3>
+                                <p v-if="item.description" class="text-xs text-neutral-300 line-clamp-2 mt-1">{{ item.description }}</p>
+                            </div>
+                            <div class="mt-4 flex items-center justify-between text-xs font-semibold">
+                                <span class="text-neutral-300 group-hover:text-white transition flex items-center gap-1">
+                                    View Details &rarr;
+                                </span>
+                            </div>
                         </div>
                     </Link>
                 </div>

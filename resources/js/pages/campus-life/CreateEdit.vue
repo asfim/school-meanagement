@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 interface CampusLifeItem {
@@ -16,18 +16,17 @@ const props = defineProps<{ item: CampusLifeItem | null }>();
 
 const isEdit = props.item !== null;
 
-const form = ref({
+const form = useForm({
+    _method: isEdit ? 'PUT' : 'POST',
     title:       props.item?.title       ?? '',
     description: props.item?.description ?? '',
     sort_order:  props.item?.sort_order  ?? 0,
     is_active:   props.item?.is_active   ?? true,
     remove_image: false,
+    image:        null as File | null,
 });
 
-const errors = ref<Record<string, string>>({});
-const processing = ref(false);
-
-const imageFile    = ref<File | null>(null);
+// Image state
 const imagePreview = ref<string | null>(null);
 const existingImage = computed(() =>
     props.item?.image_path
@@ -38,8 +37,8 @@ const existingImage = computed(() =>
 function onImageChange(e: Event) {
     const target = e.target as HTMLInputElement;
     const file   = target.files?.[0] ?? null;
-    imageFile.value    = file;
-    form.value.remove_image = false;
+    form.image         = file;
+    form.remove_image = false;
     if (file) {
         const reader = new FileReader();
         reader.onload = (ev) => { imagePreview.value = ev.target?.result as string; };
@@ -50,9 +49,9 @@ function onImageChange(e: Event) {
 }
 
 function clearImage() {
-    imageFile.value    = null;
+    form.image         = null;
     imagePreview.value = null;
-    form.value.remove_image = true;
+    form.remove_image = true;
     const input = document.getElementById('image-input') as HTMLInputElement;
     if (input) input.value = '';
 }
@@ -64,29 +63,14 @@ const breadcrumbs = [
 ];
 
 function submit() {
-    processing.value = true;
-    errors.value = {};
-
-    const data = new FormData();
-    data.append('title',       form.value.title);
-    data.append('description', form.value.description);
-    data.append('sort_order',  String(form.value.sort_order));
-    data.append('is_active',   form.value.is_active ? '1' : '0');
-    data.append('remove_image', form.value.remove_image ? '1' : '0');
-    if (imageFile.value) {
-        data.append('image', imageFile.value);
-    }
-
     const url = isEdit ? `/campus-life/${props.item!.id}` : '/campus-life';
 
-    if (isEdit) {
-        data.append('_method', 'PUT');
-    }
-
-    router.post(url, data, {
-        forceFormData: true,
-        onError: (errs) => { errors.value = errs; processing.value = false; },
-        onFinish: () => { processing.value = false; },
+    form.transform((data) => ({
+        ...data,
+        is_active: data.is_active ? 1 : 0,
+        remove_image: data.remove_image ? 1 : 0,
+    })).post(url, {
+        onSuccess: () => {},
     });
 }
 </script>
@@ -98,40 +82,33 @@ function submit() {
         <div class="p-6 max-w-3xl mx-auto space-y-8">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50">
-                    {{ isEdit ? 'Edit Gallery Item' : 'Add New Gallery Item' }}
+                    {{ isEdit ? 'Edit Gallery Item' : 'Add Gallery Item' }}
                 </h1>
                 <p class="mt-1 text-sm text-neutral-500">This item appears in the Campus Life gallery on the public homepage.</p>
             </div>
 
-            <!-- Live Preview -->
+            <!-- ── Live Preview ─────────────────────────────────────────── -->
             <div
-                class="rounded-xl overflow-hidden relative min-h-[180px] flex items-end"
-                :style="{
-                    background: (imagePreview || (existingImage && !form.remove_image))
-                        ? 'transparent'
-                        : 'linear-gradient(160deg, #2c5f47, #173A2C)',
-                    backgroundImage: (imagePreview || (existingImage && !form.remove_image))
-                        ? `url(${imagePreview ?? existingImage})`
-                        : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                }"
+                class="rounded-xl overflow-hidden relative min-h-[180px] flex items-end bg-[#14213d] border border-neutral-800"
             >
-                <div
-                    v-if="imagePreview || (existingImage && !form.remove_image)"
-                    class="absolute inset-0"
-                    style="background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 60%, transparent 100%)"
-                ></div>
-                <div class="relative z-10 p-6 text-white w-full">
+                <div class="absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden">
+                    <img
+                        v-if="imagePreview || (existingImage && !form.remove_image)"
+                        :src="imagePreview ?? existingImage ?? ''"
+                        class="w-full h-full object-contain"
+                        alt="Preview"
+                    />
+                </div>
+                <div class="relative z-10 p-6 text-white w-full bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                     <div class="text-xs font-mono uppercase tracking-widest text-yellow-400 mb-1">Campus Life · Preview</div>
                     <div class="text-xl font-bold mb-1" style="font-family: Georgia, serif; text-shadow: 0 2px 6px rgba(0,0,0,0.4)">
-                        {{ form.title || 'Gallery Title Here' }}
+                        {{ form.title || 'Moment Title Here' }}
                     </div>
-                    <div v-if="form.description" class="text-sm font-medium opacity-80 max-w-lg">{{ form.description }}</div>
+                    <div v-if="form.description" class="text-xs opacity-75 max-w-lg">{{ form.description }}</div>
                 </div>
             </div>
 
-            <!-- Form -->
+            <!-- ── Form ─────────────────────────────────────────────────── -->
             <form @submit.prevent="submit" class="space-y-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm">
 
                 <!-- Title -->
@@ -143,7 +120,7 @@ function submit() {
                         placeholder="e.g. Annual Sports Day"
                         class="sv-input"
                     />
-                    <p v-if="errors.title" class="mt-1 text-xs text-red-600">{{ errors.title }}</p>
+                    <p v-if="form.errors.title" class="mt-1 text-xs text-red-600">{{ form.errors.title }}</p>
                 </div>
 
                 <!-- Description -->
@@ -171,7 +148,7 @@ function submit() {
                         <img :src="imagePreview" alt="New preview" class="h-16 w-28 object-cover rounded-md border border-neutral-300" />
                         <div class="flex-1">
                             <p class="text-xs font-semibold text-neutral-700 dark:text-neutral-300">New image selected</p>
-                            <p class="text-xs text-neutral-400">{{ imageFile?.name }}</p>
+                            <p class="text-xs text-neutral-400">{{ form.image?.name }}</p>
                         </div>
                         <button type="button" @click="clearImage" class="text-xs font-bold text-red-600 hover:underline px-3 py-1 rounded border border-red-200 hover:bg-red-50">Clear</button>
                     </div>
@@ -196,7 +173,7 @@ function submit() {
                         class="hidden"
                         @change="onImageChange"
                     />
-                    <p v-if="errors.image" class="mt-1 text-xs text-red-600">{{ errors.image }}</p>
+                    <p v-if="form.errors.image" class="mt-1 text-xs text-red-600">{{ form.errors.image }}</p>
                 </div>
 
                 <!-- Sort + Status -->
@@ -223,10 +200,10 @@ function submit() {
                 <div class="flex items-center gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
                     <button
                         type="submit"
-                        :disabled="processing"
+                        :disabled="form.processing"
                         class="px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg shadow transition disabled:opacity-60"
                     >
-                        {{ processing ? 'Saving...' : (isEdit ? 'Update Item' : 'Create Item') }}
+                        {{ form.processing ? 'Saving...' : (isEdit ? 'Update Item' : 'Create Item') }}
                     </button>
                     <Link href="/campus-life" class="text-sm text-neutral-500 hover:underline">Cancel</Link>
                 </div>

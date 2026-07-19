@@ -206,12 +206,9 @@ class PublicNoticeController extends Controller
         ]);
     }
 
-    /**
-     * Show campus life details page.
-     */
-    public function showCampusLife(int $id): Response
+    public function showCampusLife(string $id): Response
     {
-        $item = CampusLifeItem::where('is_active', true)->findOrFail($id);
+        $item = CampusLifeItem::where('is_active', true)->findOrFail((int) $id);
 
         return Inertia::render('PublicCampusLifeDetails', [
             'item' => $item,
