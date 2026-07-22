@@ -58,9 +58,9 @@ const excerpt = computed(() => {
 
 <template>
     <Head>
-        <title>{{ notice.title }} — {{ siteSettings.institute_name || 'Ideal Professional Institute (IPI)' }}</title>
+        <title>{{ notice.title }} — {{ siteSettings.institute_name || 'Ideal Professional Institute' }}</title>
         <meta name="description" :content="excerpt || 'Notice details page.'" />
-        <meta name="keywords" content="Ideal Professional Institute, IPI, ipi, Notices, Announcements, School Circulars" />
+        <meta name="keywords" content="Ideal Professional Institute, Notices, Announcements, School Circulars" />
     </Head>
 
     <div class="nd-root">

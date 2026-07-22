@@ -181,9 +181,9 @@ function printMarksheet() {
 
 <template>
     <Head>
-        <title>Student Results — {{ siteSettings.institute_name || 'Ideal Professional Institute (IPI)' }}</title>
-        <meta name="description" content="Search student exam results and view transcripts online for Ideal Professional Institute (IPI)." />
-        <meta name="keywords" content="Ideal Professional Institute, IPI, ipi, Result Lookup, Student Marks, Transcripts, Exam Results" />
+        <title>Student Results — {{ siteSettings.institute_name || 'Ideal Professional Institute' }}</title>
+        <meta name="description" content="Search student exam results and view transcripts online for Ideal Professional Institute." />
+        <meta name="keywords" content="Ideal Professional Institute, Result Lookup, Student Marks, Transcripts, Exam Results" />
     </Head>
 
     <div class="pr-root">

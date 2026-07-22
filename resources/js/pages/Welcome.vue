@@ -278,9 +278,9 @@ function getSubjectGrade(score: number): string {
 
 <template>
     <Head>
-        <title>{{ siteSettings.institute_name || 'Ideal Professional Institute (IPI)' }} — Notice Board & Portal</title>
-        <meta name="description" :content="siteSettings.tagline || 'Welcome to the official portal of Ideal Professional Institute (IPI). Access Notices, Campus Life moments, and Results online.'" />
-        <meta name="keywords" content="Ideal Professional Institute, IPI, ipi, Notice Board, Student Portal, Results Query, Campus Life Gallery" />
+        <title>{{ siteSettings.institute_name || 'Ideal Professional Institute' }} — Notice Board & Portal</title>
+        <meta name="description" :content="siteSettings.tagline || 'Welcome to the official portal of Ideal Professional Institute. Access Notices, Campus Life moments, and Results online.'" />
+        <meta name="keywords" content="Ideal Professional Institute, Notice Board, Student Portal, Results Query, Campus Life Gallery" />
     </Head>
     <FlashToast />
 

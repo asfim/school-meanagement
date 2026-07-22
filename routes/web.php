@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [PublicNoticeController::class, 'welcome'])->name('home');
+Route::get('/admission', [PublicAdmissionController::class, 'create'])->name('admission.create');
+Route::post('/admission', [PublicAdmissionController::class, 'store'])->name('admission.store');
 Route::get('/result', [PublicNoticeController::class, 'result'])->name('public.result');
 Route::get('/notice/{slug}', [PublicNoticeController::class, 'show'])->name('public.notice.show');
 Route::get('/campus-life/{id}', [PublicNoticeController::class, 'showCampusLife'])->name('public.campus-life.show')->whereNumber('id');

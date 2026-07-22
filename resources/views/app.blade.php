@@ -4,9 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>Ideal Professional Institute (IPI)</title>
-        <meta name="description" content="Welcome to the official portal of Ideal Professional Institute (IPI). Access our Notice Board, Student Results, and explore Campus Life gallery.">
-        <meta name="keywords" content="Ideal Professional Institute, IPI, Notice Board, Result Portal, Campus Life, IPI Notices, Education Portal">
+        <title inertia>Ideal Professional Institute</title>
+        <meta name="description" content="Welcome to the official portal of Ideal Professional Institute. Access our Notice Board, Student Results, and explore Campus Life gallery.">
+        <meta name="keywords" content="Ideal Professional Institute, Notice Board, Result Portal, Campus Life, Notices, Education Portal">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
